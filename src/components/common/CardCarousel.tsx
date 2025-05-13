@@ -72,30 +72,28 @@ const CardCarousel: React.FC<CardCarouselProps> = ({ items, renderCard, classNam
           <LeftOutlined className="text-2xl" />
         </button>
 
-        {/* 卡片容器 */}
-        <div className="relative w-full max-w-[1120px] h-full mx-auto">
-          {items.map((item, idx) => {
-            const pos = getIndex(idx - current, len);
+        {/* 卡片容器 - 使用flex并排居中三张卡片 */}
+        <div className="relative w-full max-w-[1120px] h-full mx-auto flex items-center justify-center">
+          {[-1, 0, 1].map((offset) => {
+            const idx = getIndex(current + offset, len);
             let style = '';
-            
-            if (pos === 0) {
-              style = 'z-20 scale-110 opacity-100 translate-x-0';
-            } else if (pos === 1) {
-              style = 'z-10 scale-90 opacity-60 translate-x-[420px]';
-            } else if (pos === len - 1) {
-              style = 'z-10 scale-90 opacity-60 -translate-x-[420px]';
+            if (offset === 0) {
+              style = 'z-20 scale-100 opacity-100';
             } else {
-              style = 'opacity-0 scale-75 pointer-events-none';
+              style = 'z-10 scale-90 opacity-60';
             }
-
             return (
               <div
                 key={idx}
-                className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-in-out rounded-[28px] overflow-hidden ${style}`}
-                style={{ willChange: 'transform, opacity' }}
-                onClick={() => pos !== 0 && setCurrent(idx)}
+                className={`transition-all duration-500 ease-in-out rounded-[28px] overflow-hidden mx-4 ${style}`}
+                style={{
+                  width: '360px',
+                  height: '420px',
+                  cursor: offset === 0 ? 'default' : 'pointer',
+                }}
+                onClick={() => offset !== 0 && setCurrent(idx)}
               >
-                {renderCardContent(item, idx, pos === 0)}
+                {renderCardContent(items[idx], idx, offset === 0)}
               </div>
             );
           })}

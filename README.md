@@ -187,4 +187,48 @@ chore: 其他修改
 
 如有问题或建议，请通过以下方式联系我们：
 - Issues: [GitHub Issues](https://github.com/your-username/beauty-platform/issues)
-- Email: your-email@example.com 
+- Email: your-email@example.com
+
+## 🛠️ 常见问题与处理
+
+### 首页卡片轮播无法居中问题
+
+**问题现象：**
+- 首页卡片轮播组件（CardCarousel）出现卡片整体偏右、无法视觉居中的情况。
+
+**原因分析：**
+- 旧实现采用绝对定位+transform，所有卡片以中心为锚点，只有当前卡片居中，左右卡片通过平移实现，导致整体视觉偏移。
+- 多卡片并排时，绝对定位不适合做视觉居中。
+
+**解决方法：**
+- 用 flex 布局替代绝对定位，让三张卡片（左、中、右）始终并排居中显示。
+- 只渲染当前卡片和左右两侧卡片，其他卡片隐藏，提升性能和美观度。
+- 具体实现：
+  - 卡片容器使用 `flex items-center justify-center`，每张卡片用 `mx-4` 间距，去掉绝对定位。
+  - 只渲染 `[-1, 0, 1]` 三张卡片，通过 `offset` 控制样式和点击切换。
+  - 当前卡片 `scale-100 opacity-100 z-20`，左右卡片 `scale-90 opacity-60 z-10`。
+
+**参考代码片段：**
+```tsx
+<div className="flex items-center justify-center">
+  {[-1, 0, 1].map((offset) => {
+    const idx = getIndex(current + offset, len);
+    let style = offset === 0
+      ? 'z-20 scale-100 opacity-100'
+      : 'z-10 scale-90 opacity-60';
+    return (
+      <div
+        key={idx}
+        className={`transition-all duration-500 rounded-[28px] overflow-hidden mx-4 ${style}`}
+        style={{ width: '320px', height: '380px', cursor: offset === 0 ? 'default' : 'pointer' }}
+        onClick={() => offset !== 0 && setCurrent(idx)}
+      >
+        {renderCardContent(items[idx], idx, offset === 0)}
+      </div>
+    );
+  })}
+</div>
+```
+
+**适用场景：**
+- 任何需要多卡片并排视觉居中的轮播、Banner、走马灯等组件。 
