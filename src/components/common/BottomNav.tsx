@@ -1,10 +1,11 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { HomeOutlined, BookOutlined, UserOutlined } from '@ant-design/icons';
+import { HomeOutlined, BookOutlined, UserOutlined, TeamOutlined } from '@ant-design/icons';
 
 const navItems = [
   { icon: <HomeOutlined />, label: '首页', path: '/' },
   { icon: <BookOutlined />, label: '课堂', path: '/course' },
+  { icon: <TeamOutlined />, label: '社区', path: '/community' },
   { icon: <UserOutlined />, label: '我的', path: '/profile' },
 ];
 

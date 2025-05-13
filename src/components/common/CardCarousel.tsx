@@ -20,26 +20,11 @@ const getIndex = (idx: number, len: number) => (idx + len) % len;
 
 const CardCarousel: React.FC<CardCarouselProps> = ({ items, renderCard, className = '' }) => {
   const [current, setCurrent] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
   const len = items.length;
 
   // 循环切换
   const go = (dir: number) => {
     setCurrent((prev) => getIndex(prev + dir, len));
-  };
-
-  // 处理触摸事件
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-
-    if (Math.abs(diff) > 50) { // 最小滑动距离
-      go(diff > 0 ? 1 : -1);
-    }
   };
 
   // 渲染卡片内容
@@ -57,11 +42,7 @@ const CardCarousel: React.FC<CardCarouselProps> = ({ items, renderCard, classNam
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-      <div 
-        className="relative flex items-center justify-center h-[460px]"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div className="relative flex items-center justify-center h-[460px]">
         {/* 左箭头 */}
         <button
           className="flex absolute left-8 z-30 h-14 w-14 items-center justify-center rounded-full bg-white/80 shadow-lg border border-[#FF6B81]/20 text-[#FF6B81] hover:bg-[#FF6B81]/10 hover:scale-110 transition-all duration-200"
@@ -72,25 +53,19 @@ const CardCarousel: React.FC<CardCarouselProps> = ({ items, renderCard, classNam
           <LeftOutlined className="text-2xl" />
         </button>
 
-        {/* 卡片容器 - 使用flex并排居中三张卡片 */}
-        <div className="relative w-full max-w-[1120px] h-full mx-auto flex items-center justify-center">
+        {/* 卡片容器 - flex布局，只渲染当前和两侧卡片 */}
+        <div className="flex items-center justify-center w-full h-full">
           {[-1, 0, 1].map((offset) => {
             const idx = getIndex(current + offset, len);
-            let style = '';
-            if (offset === 0) {
-              style = 'z-20 scale-100 opacity-100';
-            } else {
-              style = 'z-10 scale-90 opacity-60';
-            }
+            let style =
+              offset === 0
+                ? 'z-20 scale-100 opacity-100 shadow-xl'
+                : 'z-10 scale-90 opacity-60 shadow-md cursor-pointer';
             return (
               <div
                 key={idx}
-                className={`transition-all duration-500 ease-in-out rounded-[28px] overflow-hidden mx-4 ${style}`}
-                style={{
-                  width: '360px',
-                  height: '420px',
-                  cursor: offset === 0 ? 'default' : 'pointer',
-                }}
+                className={`transition-all duration-500 rounded-[28px] overflow-hidden mx-4 ${style}`}
+                style={{ width: '320px', height: '380px' }}
                 onClick={() => offset !== 0 && setCurrent(idx)}
               >
                 {renderCardContent(items[idx], idx, offset === 0)}

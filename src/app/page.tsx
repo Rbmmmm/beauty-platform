@@ -14,7 +14,13 @@ const cardItems: CardCarouselItem[] = [
       <div className="w-[320px] h-[380px] bg-gradient-to-b from-[#FFE5E5] to-[#FFF0F0] rounded-[28px] p-6 flex flex-col items-center shadow-lg">
         <h3 className="text-2xl font-bold text-[#FF6B81] mb-8">智能肤质检测</h3>
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-32 h-32 rounded-full bg-white flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300 shadow-lg">
+          <div
+            className="w-32 h-32 rounded-full bg-white flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300 shadow-lg"
+            onClick={() => window.location.href = '/skin'}
+            role="button"
+            tabIndex={0}
+            aria-label="开始检测"
+          >
             <CameraOutlined className="text-3xl text-[#FF6B81] mb-2" />
             <span className="text-lg font-medium text-[#FF6B81]">开始检测</span>
           </div>

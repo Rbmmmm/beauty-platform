@@ -1,7 +1,9 @@
+"use client";
 import React from 'react';
 import { Layout } from 'antd';
 import BottomNav from '@/components/common/BottomNav';
 import RemoteHelpButton from '@/components/common/RemoteHelpButton';
+import { usePathname } from 'next/navigation';
 
 const { Header, Content } = Layout;
 
@@ -10,6 +12,7 @@ interface RootLayoutProps {
 }
 
 const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
+  const pathname = usePathname();
   return (
     <Layout className="min-h-screen bg-white">
       <Header
@@ -26,7 +29,7 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
         {children}
       </Content>
 
-      <BottomNav />
+      {!(pathname && pathname.startsWith('/skin')) && <BottomNav />}
     </Layout>
   );
 };
