@@ -8,7 +8,6 @@ export interface Comment {
   id: string;
   content: string;
   author: Author;
-  createdAt: string;
   likes: number;
   replies?: Comment[];
 }
@@ -26,14 +25,6 @@ export interface User {
   username: string;
   nickname: string;
   avatar?: string;
-}
-
-export interface Comment {
-  id: number;
-  author: User;
-  content: string;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface Post {

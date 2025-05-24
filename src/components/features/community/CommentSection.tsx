@@ -69,7 +69,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                   {comment.author.username}
                 </span>
                 <span className="text-sm text-gray-500">
-                  {new Date(comment.createdAt).toLocaleDateString()}
+                  {new Date(comment.created_at).toLocaleDateString()}
                 </span>
               </div>
               <p className="text-lg text-gray-700 mb-2">{comment.content}</p>

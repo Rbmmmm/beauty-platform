@@ -1,5 +1,5 @@
 import { apiClient } from '@/utils/apiClient';
-import { Post, CreatePostData, UpdatePostData, Comment, CategoryPostsResponse } from '@/types/post';
+import { Post, PostCreateData, PostUpdateData, Comment, CategoryPostsResponse } from '@/types/post';
 import axios from 'axios';
 
 export const postService = {
@@ -10,7 +10,7 @@ export const postService = {
       console.log('获取帖子列表响应:', {
         data: response.data,
         samplePost: response.data.results?.[0],
-        createdAt: response.data.results?.[0]?.createdAt,
+        createdAt: response.data.results?.[0]?.created_at,
       });
       return response.data.results; // 直接返回帖子数组
     } catch (error) {
@@ -37,7 +37,7 @@ export const postService = {
   },
 
   // 创建帖子
-  createPost: async (data: CreatePostData) => {
+  createPost: async (data: PostCreateData) => {
     try {
       if (!data.content || data.content.trim() === '') {
         throw new Error('帖子内容不能为空');
@@ -47,15 +47,13 @@ export const postService = {
       formData.append('content', data.content.trim());
       
       if (data.images && data.images.length > 0) {
-        data.images.forEach(image => {
-          if (image instanceof File) {
-            formData.append('images', image);
-          }
+        data.images.forEach((image: File) => {
+          formData.append('images', image);
         });
       }
       
       if (data.category) {
-        formData.append('category', data.category);
+        formData.append('category', data.category.toString());
       }
 
       console.log('发送帖子数据:', {
@@ -103,16 +101,16 @@ export const postService = {
   },
 
   // 更新帖子
-  updatePost: async (postId: string, data: UpdatePostData) => {
+  updatePost: async (postId: string, data: PostUpdateData) => {
     const formData = new FormData();
     if (data.content) {
       formData.append('content', data.content);
     }
     if (data.images) {
-      data.images.forEach(image => formData.append('images', image));
+      data.images.forEach((image: File) => formData.append('images', image));
     }
     if (data.category) {
-      formData.append('category', data.category);
+      formData.append('category', data.category.toString());
     }
     if (data.tags) {
       formData.append('tags', JSON.stringify(data.tags));
