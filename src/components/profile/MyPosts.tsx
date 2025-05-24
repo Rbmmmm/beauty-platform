@@ -16,9 +16,12 @@ export default function MyPosts() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  const backendUrl = apiBaseUrl.replace(/\/api$/, '');
+
   const fetchPosts = async (pageNum: number = 1) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/community/posts/my_posts/?page=${pageNum}`, {
+      const response = await fetch(`${apiBaseUrl}/community/posts/my_posts/?page=${pageNum}`, {
         headers: {
           'Authorization': accessToken ? `Bearer ${accessToken}` : '',
         },
@@ -73,7 +76,7 @@ export default function MyPosts() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/community/posts/${postId}/`, {
+      const response = await fetch(`${apiBaseUrl}/community/posts/${postId}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': accessToken ? `Bearer ${accessToken}` : '',
@@ -175,7 +178,7 @@ export default function MyPosts() {
                 {post.images.map((image, index) => (
                   <div key={index} className="relative aspect-square">
                     <img
-                      src={image.startsWith('http') ? image : `http://localhost:8000${image}`}
+                      src={image.startsWith('http') ? image : `${backendUrl}${image}`}
                       alt={`帖子图片 ${index + 1}`}
                       className="object-cover rounded-lg w-full h-full"
                       style={{ objectFit: 'cover' }}
