@@ -33,6 +33,17 @@ class PostViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(category_id=category)
         return queryset.order_by('-created_at')
 
+    @action(detail=False, methods=['get'])
+    def my_posts(self, request):
+        """获取当前用户的帖子列表"""
+        posts = Post.objects.filter(author=request.user).order_by('-created_at')
+        page = self.paginate_queryset(posts)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(posts, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['post'])
     def like(self, request, pk=None):
         """点赞帖子"""

@@ -3,10 +3,10 @@ import { Upload, App } from 'antd';
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import type { RcFile } from 'antd/es/upload';
-import { CreatePostData } from '@/types/post';
+import { PostCreateData } from '@/types/post';
 
 interface CreatePostFormProps {
-  onSubmit: (data: CreatePostData) => Promise<boolean>;
+  onSubmit: (data: PostCreateData) => Promise<boolean>;
   onCancel: () => void;
 }
 
