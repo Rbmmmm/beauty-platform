@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 :root {
+  --primary-color: #ff6b6b;
+  --secondary-color: #4ecdc4;
+  --text-color: #2d3436;
+  --background-color: #f9f9f9;
+  --error-color: #ff4757;
+  --success-color: #2ed573;
+  --warning-color: #ffa502;
   --max-width: 1440px;
   --border-radius: 12px;
   --font-sans: "PingFang SC", "Microsoft YaHei", -apple-system, system-ui, sans-serif;
@@ -75,5 +82,79 @@ html {
   
   .card-shadow {
     @apply shadow-md hover:shadow-lg transition-shadow duration-300;
+  }
+}
+
+/* 基础样式 */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+/* 适老化样式 */
+.text-large {
+  font-size: 1.25rem;
+  line-height: 1.75;
+}
+
+.text-xlarge {
+  font-size: 1.5rem;
+  line-height: 2;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  @apply bg-[var(--primary-color)] text-white px-6 py-3 rounded-lg text-lg font-medium
+    hover:opacity-90 transition-opacity duration-200;
+}
+
+.btn-secondary {
+  @apply bg-[var(--secondary-color)] text-white px-6 py-3 rounded-lg text-lg font-medium
+    hover:opacity-90 transition-opacity duration-200;
+}
+
+/* 卡片样式 */
+.card {
+  @apply bg-white rounded-xl shadow-md p-6;
+}
+
+/* 输入框样式 */
+.input-large {
+  @apply w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none
+    focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent;
+}
+
+/* 动画效果 */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 响应式布局 */
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .container {
+    @apply px-6;
+  }
+}
+
+@media (min-width: 1025px) {
+  .container {
+    @apply px-8;
   }
 } 

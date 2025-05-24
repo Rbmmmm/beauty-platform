@@ -1,13 +1,9 @@
 # 🌟 银发美妆智能平台
 
 <div align="center">
-
-![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
-![React](https://img.shields.io/badge/react-19.0.0-blue.svg)
-![Next.js](https://img.shields.io/badge/next.js-15.3.2-black.svg)
-
+  <img src="public/logo.png" alt="银发美妆平台" width="200" />
+  <br />
+  <p>为银发女性打造的智能美妆平台</p>
 </div>
 
 ## 📖 项目简介
@@ -71,9 +67,9 @@ npm install
 npm run dev
 ```
 
-4. 打开浏览器访问
-```
-http://localhost:3000
+4. 构建生产版本
+```bash
+npm run build
 ```
 
 ## 📁 项目结构

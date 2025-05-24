@@ -4,7 +4,7 @@ import type { LoginData, RegisterData, AuthResponse, TokenRefreshData } from '@/
 export const authService = {
   // 用户注册
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/api/users/register/', data);
+    const response = await apiClient.post<AuthResponse>('/users/register/', data);
     return response.data;
   },
 
