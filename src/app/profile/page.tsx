@@ -1,52 +1,99 @@
-import React from 'react';
-import { Card, Button } from 'antd';
+'use client';
+
+import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
+import Link from 'next/link';
 
 export default function ProfilePage() {
-  return (
-    <div className="p-4 space-y-4">
-      {/* 用户信息 */}
-      <div className="bg-white p-4 rounded-lg flex items-center space-x-4">
-        <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
-        <div>
-          <h2 className="text-xl font-bold">时尚奶奶</h2>
-          <p className="text-gray-500">加入 30 天</p>
-        </div>
-      </div>
+  const { logout } = useAuth();
+  const { user, isAuthenticated } = useAuthStore();
 
-      {/* 数据统计 */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="text-center">
-          <h4 className="text-lg font-bold">28</h4>
-          <p className="text-gray-500">肌肤年龄</p>
-        </Card>
-        <Card className="text-center">
-          <h4 className="text-lg font-bold">12h</h4>
-          <p className="text-gray-500">学习时长</p>
-        </Card>
-        <Card className="text-center">
-          <h4 className="text-lg font-bold">23</h4>
-          <p className="text-gray-500">互动次数</p>
-        </Card>
-      </div>
-
-      {/* 权益入口 */}
-      <div className="space-y-4">
-        <Card title="我的权益">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span>优雅值积分</span>
-              <span className="text-primary">1280</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>积分兑换</span>
-              <span className="text-gray-500">{'>'}</span>
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900">
+              请先登录
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              登录后可以查看您的个人信息和发布的内容
+            </p>
+            <div className="mt-6 space-y-4">
+              <Link
+                href="/auth/login"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                登录
+              </Link>
+              <Link
+                href="/auth/register"
+                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                注册
+              </Link>
             </div>
           </div>
-        </Card>
+        </div>
+      </div>
+    );
+  }
 
-        <Button type="primary" block size="large">
-          线下沙龙报名
-        </Button>
+  return (
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="px-4 py-5 sm:px-6">
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              个人信息
+            </h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              您的个人资料和账户信息
+            </p>
+          </div>
+          <div className="border-t border-gray-200">
+            <dl>
+              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">用户名</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {user?.username}
+                </dd>
+              </div>
+              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">昵称</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {user?.nickname}
+                </dd>
+              </div>
+              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">手机号</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {user?.phone || '未设置'}
+                </dd>
+              </div>
+              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">个人简介</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {user?.bio || '未设置'}
+                </dd>
+              </div>
+              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">注册时间</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {new Date(user?.date_joined || '').toLocaleString()}
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <div className="px-4 py-5 sm:px-6">
+            <button
+              onClick={logout}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              退出登录
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,84 +1,129 @@
 "use client";
 
-import React, { useState } from "react";
+import React from 'react';
+import { useState, useEffect } from 'react';
+import PostList from '@/components/features/community/PostList';
+import CreatePostForm from '@/components/features/community/CreatePostForm';
+import { Post } from '@/types/post';
+import { postService } from '@/services/postService';
+import { App } from 'antd';
 
-const mockTopics = ["美妆心得", "护肤交流", "母女同妆", "晒妆容", "抗老经验", "广场舞妆容"];
-
-const mockPosts = [
-  {
-    user: "时尚奶奶",
-    avatar: "",
-    content: "今天和女儿一起尝试了清新自然妆，感觉年轻了10岁！",
-    img: "",
-    likes: 32,
-    comments: 8,
-    shares: 2,
-  },
-  {
-    user: "优雅阿姨",
-    avatar: "",
-    content: "分享一下我的抗老护肤小妙招，欢迎姐妹们留言交流~",
-    img: "",
-    likes: 21,
-    comments: 5,
-    shares: 1,
-  },
-  {
-    user: "广场舞达人",
-    avatar: "",
-    content: "跳舞前一定要定妆，推荐一款超好用的定妆喷雾！",
-    img: "",
-    likes: 18,
-    comments: 3,
-    shares: 0,
-  },
+const topics = [
+  { id: 'all', name: '全部' },
+  { id: 'makeup', name: '妆容分享' },
+  { id: 'skincare', name: '护肤心得' },
+  { id: 'products', name: '好物推荐' },
+  { id: 'tips', name: '美妆技巧' },
 ];
 
 export default function CommunityPage() {
-  const [activeTopic, setActiveTopic] = useState<string | null>(null);
+  const { message } = App.useApp();
+  const [activeTopic, setActiveTopic] = useState('all');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 获取帖子列表
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      const params = activeTopic === 'all' ? undefined : { category: activeTopic };
+      const response = await postService.getPosts(params);
+      if (Array.isArray(response)) {
+        setPosts(response);
+      } else if (response && typeof response === 'object' && 'results' in response) {
+        setPosts(response.results);
+      } else {
+        console.error('意外的响应格式:', response);
+        setPosts([]);
+      }
+    } catch (error) {
+      console.error('获取帖子失败:', error);
+      message.error('获取帖子失败');
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, [activeTopic]);
+
+  const handleTopicChange = (topicId: string) => {
+    setActiveTopic(topicId);
+  };
+
+  const handleCreatePost = async (data: { content: string; images: File[] }) => {
+    try {
+      const result = await postService.createPost({
+        content: data.content,
+        images: data.images,
+        category: activeTopic !== 'all' ? activeTopic : undefined
+      });
+      message.success('发布成功');
+      setShowCreateForm(false);
+      fetchPosts();
+      return true;
+    } catch (error) {
+      if (error instanceof Error) {
+        message.error(`发布失败: ${error.message}`);
+      } else {
+        message.error('发布失败，请重试');
+      }
+      return false;
+    }
+  };
 
   return (
-    <main className="flex flex-col items-center min-h-screen bg-gradient-to-b from-[#FFF5F7] to-[#FFF] px-4 pb-12">
-      {/* 标题 */}
-      <h1 className="text-[40px] font-extrabold text-[#FF6B81] mb-6 mt-8">社区</h1>
-      {/* 发帖入口 */}
-      <button className="mb-8 px-8 py-4 rounded-full bg-[#FF6B81] text-white text-2xl font-bold shadow hover:bg-[#FF6B81]/90 transition-all">+ 发帖</button>
-      {/* 热门话题标签 */}
-      <div className="flex flex-wrap gap-4 mb-8 w-full max-w-3xl justify-center">
-        {mockTopics.map(topic => (
+    <div className="container mx-auto px-4 py-8">
+      {/* 话题导航 */}
+      <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
+        {topics.map((topic) => (
           <button
-            key={topic}
-            className={`px-6 py-2 rounded-full text-xl font-bold border-2 transition-all ${activeTopic === topic ? 'bg-[#FF6B81] text-white border-[#FF6B81]' : 'bg-white text-[#FF6B81] border-[#FF6B81]/40 hover:bg-[#FF6B81]/10'}`}
-            onClick={() => setActiveTopic(topic === activeTopic ? null : topic)}
+            key={topic.id}
+            onClick={() => handleTopicChange(topic.id)}
+            className={`px-6 py-2 text-lg rounded-full whitespace-nowrap transition-colors ${
+              activeTopic === topic.id
+                ? 'bg-[#FF6B81] text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
           >
-            #{topic}
+            {topic.name}
           </button>
         ))}
       </div>
-      {/* 帖子卡片区 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-        {mockPosts
-          .filter(post => !activeTopic || post.content.includes(activeTopic))
-          .map((post, idx) => (
-          <div key={idx} className="rounded-[28px] shadow-lg bg-white p-6 flex flex-col gap-4">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-14 h-14 rounded-full bg-[#FFE5E5] flex items-center justify-center text-2xl text-[#FF6B81] font-bold">
-                {post.user[0]}
-              </div>
-              <div className="text-xl font-bold text-[#FF6B81]">{post.user}</div>
-            </div>
-            <div className="text-xl text-gray-700 mb-2">{post.content}</div>
-            {/* 图片占位 */}
-            <div className="w-full h-48 rounded-2xl bg-[#F3F4F6] flex items-center justify-center text-gray-300 text-2xl mb-2">图片</div>
-            {/* 操作按钮 */}
-            <div className="flex gap-8 mt-2">
-              <button className="flex items-center gap-2 text-lg text-[#FF6B81] hover:scale-110 transition-transform"><span>👍</span>{post.likes}</button>
-              <button className="flex items-center gap-2 text-lg text-[#FF6B81] hover:scale-110 transition-transform"><span>💬</span>{post.comments}</button>
-              <button className="flex items-center gap-2 text-lg text-[#FF6B81] hover:scale-110 transition-transform"><span>🔗</span>{post.shares}</button>
-            </div>
-          </div>
-        ))}
+
+      {/* 发帖按钮 */}
+      <div className="mb-8">
+        <button
+          onClick={() => setShowCreateForm(true)}
+          className="w-full py-4 text-xl text-white bg-[#FF6B81] rounded-[28px] hover:bg-[#FF4D6D] transition-colors"
+        >
+          分享你的美妆心得
+        </button>
       </div>
-    </main>
+
+      {/* 发帖表单 */}
+      {showCreateForm && (
+        <div className="mb-8">
+          <CreatePostForm
+            onSubmit={handleCreatePost}
+            onCancel={() => setShowCreateForm(false)}
+          />
+        </div>
+      )}
+
+      {/* 帖子列表 */}
+      {loading ? (
+        <div className="text-center py-8 text-gray-500">加载中...</div>
+      ) : posts.length > 0 ? (
+        <PostList posts={posts} />
+      ) : (
+        <div className="text-center py-8 text-gray-500">
+          暂无帖子，快来发布第一条吧！
+        </div>
+      )}
+    </div>
   );
 } 
