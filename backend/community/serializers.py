@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Post, Category, Comment
+from .models import Post, Category, Comment, PostImage
 
 User = get_user_model()
 
@@ -60,6 +60,11 @@ class CommentBriefSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('id', 'author', 'content', 'created_at')
 
+class PostImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostImage
+        fields = ['id', 'image']
+
 class PostListSerializer(serializers.ModelSerializer):
     """帖子列表序列化器"""
     author = UserBriefSerializer(read_only=True)
@@ -68,6 +73,7 @@ class PostListSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     is_collected = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -94,6 +100,9 @@ class PostListSerializer(serializers.ModelSerializer):
             return obj.collections.filter(id=request.user.id).exists()
         return False
 
+    def get_images(self, obj):
+        return [img.image.url for img in obj.post_images.all()]
+
 class PostDetailSerializer(PostListSerializer):
     """帖子详情序列化器"""
     comments = serializers.SerializerMethodField()
@@ -107,7 +116,10 @@ class PostDetailSerializer(PostListSerializer):
         return CommentSerializer(comments, many=True, context=self.context).data
 
 class PostCreateSerializer(serializers.ModelSerializer):
-    """创建帖子序列化器"""
+    images = serializers.ListField(
+        child=serializers.ImageField(), write_only=True, required=False
+    )
+
     class Meta:
         model = Post
         fields = ('content', 'images', 'category', 'tags')
@@ -118,5 +130,8 @@ class PostCreateSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        validated_data['author'] = self.context['request'].user
-        return super().create(validated_data) 
+        images = validated_data.pop('images', [])
+        post = Post.objects.create(author=self.context['request'].user, **validated_data)
+        for image in images:
+            PostImage.objects.create(post=post, image=image)
+        return post 

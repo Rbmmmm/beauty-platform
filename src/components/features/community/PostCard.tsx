@@ -5,7 +5,10 @@ import { Post } from '@/types/post';
 
 const PostCard: React.FC<{ post: Post }> = ({ post }) => {
   const router = useRouter();
-  const cover = post.images?.[0];
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '') || 'http://localhost:8000';
+  const cover = post.images?.[0]
+    ? (post.images[0].startsWith('http') ? post.images[0] : `${backendUrl}${post.images[0]}`)
+    : undefined;
 
   return (
     <div
@@ -15,7 +18,14 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
       {/* 封面图片 */}
       {cover && (
         <div className="relative aspect-square rounded-2xl overflow-hidden mb-3">
-          <Image src={cover} alt="封面" fill className="object-cover" />
+          <Image
+            src={cover}
+            alt="封面"
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover"
+            priority
+          />
         </div>
       )}
       {/* 作者与内容摘要 */}
@@ -34,8 +44,8 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
       <div className="text-lg text-gray-700 line-clamp-2 mb-2">{post.content}</div>
       {/* 数据区 */}
       <div className="flex gap-6 text-gray-500 text-base">
-        <span>👍 {post.likes || 0}</span>
-        <span>💬 {post.comments?.length || 0}</span>
+        <span>👍 {post.likes_count}</span>
+        <span>💬 {post.comments_count}</span>
       </div>
     </div>
   );

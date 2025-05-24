@@ -20,6 +20,8 @@ const PostDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showComments, setShowComments] = useState(false);
 
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '') || 'http://localhost:8000';
+
   // 加载帖子详情
   const loadPost = async () => {
     try {
@@ -118,16 +120,21 @@ const PostDetailPage = () => {
         {/* 帖子图片 */}
         {post.images && post.images.length > 0 && (
           <div className="grid grid-cols-2 gap-4">
-            {post.images.map((image, index) => (
-              <div key={index} className="relative aspect-square rounded-xl overflow-hidden">
-                <Image
-                  src={image}
-                  alt={`帖子图片 ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ))}
+            {post.images.map((image, index) => {
+              const imgUrl = image.startsWith('http') ? image : `${backendUrl}${image}`;
+              return (
+                <div key={index} className="relative aspect-square rounded-xl overflow-hidden">
+                  <Image
+                    src={imgUrl}
+                    alt={`帖子图片 ${index + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                    priority={index === 0}
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
 

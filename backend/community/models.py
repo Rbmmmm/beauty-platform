@@ -58,3 +58,10 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'{self.author.username}的评论 - {self.content[:20]}'
+
+class PostImage(models.Model):
+    post = models.ForeignKey(Post, related_name='post_images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='post_images/')
+
+    def __str__(self):
+        return f"{self.post.id} - {self.image.url}"

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Post, Category
+from .models import Post, Category, PostImage
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -65,3 +65,7 @@ class PostAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at')
         }),
     )
+
+@admin.register(PostImage)
+class PostImageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'post', 'image')

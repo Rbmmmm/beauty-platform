@@ -7,6 +7,7 @@ import CreatePostForm from '@/components/features/community/CreatePostForm';
 import { Post } from '@/types/post';
 import { postService } from '@/services/postService';
 import { App } from 'antd';
+import { useRouter } from 'next/navigation';
 
 const topics = [
   { id: 'all', name: '全部' },
@@ -18,6 +19,7 @@ const topics = [
 
 export default function CommunityPage() {
   const { message } = App.useApp();
+  const router = useRouter();
   const [activeTopic, setActiveTopic] = useState('all');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -49,6 +51,19 @@ export default function CommunityPage() {
   useEffect(() => {
     fetchPosts();
   }, [activeTopic]);
+
+  // 监听路由变化，回到社区主页时自动刷新
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchPosts();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
 
   const handleTopicChange = (topicId: string) => {
     setActiveTopic(topicId);

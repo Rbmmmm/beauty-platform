@@ -6,6 +6,9 @@ const nextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  images: {
+    domains: ['localhost'],
+  },
 };
 
 module.exports = nextConfig;
