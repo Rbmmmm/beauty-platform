@@ -31,6 +31,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onSubmit, onCancel }) =
   const loadActivities = async () => {
     try {
       const res = await activityService.getActivities();
+      console.log('Fetched Activities:', res.results);
       setActivities(res.results || []);
     } catch (error) {
       message.error('获取活动列表失败');
@@ -40,6 +41,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onSubmit, onCancel }) =
   const loadTags = async () => {
     try {
       const res = await apiClient.get('tags/');
+      console.log('Fetched All Tags:', res.data.results);
       setTags(res.data.results || []);
     } catch (error) {
       message.error('获取标签列表失败');
@@ -119,12 +121,28 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onSubmit, onCancel }) =
 
   const handleActivityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedActivity(e.target.value);
+    setSelectedTags([]);
   };
 
   const handleTagsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const options = Array.from(e.target.selectedOptions).map(option => option.value);
     setSelectedTags(options);
   };
+
+  // 根据所选活动动态筛选可选标签
+  // 如果未选择活动，标签列表为空，并禁用选择框。
+  // 如果选择了活动，显示所有标签中，不属于当前活动的标签。
+  const currentActivity = activities.find(a => String(a.id) === selectedActivity);
+
+  const availableTags = selectedActivity
+    ? tags.filter(tag => 
+        !currentActivity?.tags.some(activityTag => activityTag.id === tag.id)
+      )
+    : [];
+
+  console.log('Selected Activity ID:', selectedActivity);
+  console.log('Current Activity Object:', currentActivity);
+  console.log('Available Tags for Selected Activity (Excluding):', availableTags);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
@@ -151,12 +169,13 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onSubmit, onCancel }) =
           value={selectedTags}
           onChange={handleTagsChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          disabled={!selectedActivity}
         >
-          {tags.map((tag) => (
-            <option key={tag.id} value={tag.id}>{tag.name}</option>
+          {availableTags.map((tag) => (
+            <option key={tag.id} value={String(tag.id)}>{tag.name}</option>
           ))}
         </select>
-        <p className="text-xs text-gray-400 mt-1">按住 Ctrl/Command 可多选</p>
+        <p className="text-xs text-gray-400 mt-1">{selectedActivity ? '按住 Ctrl/Command 可多选' : '请先选择活动'}</p>
       </div>
 
       <textarea
