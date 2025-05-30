@@ -4,21 +4,24 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Post } from '@/types/post';
 import { postService } from '@/services/postService';
-import CommentList from '@/components/features/community/CommentList';
-import { HeartOutlined, HeartFilled, StarOutlined, StarFilled } from '@ant-design/icons';
-import { message, Spin, Button } from 'antd';
+import { CommentList } from '@/components/features/community/CommentList';
+import { HeartOutlined, HeartFilled, StarOutlined, StarFilled, RobotOutlined } from '@ant-design/icons';
+import { message, Spin, App } from 'antd';
 import Image from 'next/image';
 import Link from 'next/link';
+import { apiClient } from '@/utils/apiClient';
 
 console.log('CommentList:', CommentList);
 
 const PostDetailPage = () => {
+  const { message: messageApi } = App.useApp();
   const params = useParams();
   const postId = params.postId as string;
   console.log('PostDetailPage postId:', postId);
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [showComments, setShowComments] = useState(false);
+  const [isGeneratingReply, setIsGeneratingReply] = useState(false);
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '') || 'http://localhost:8000';
 
@@ -29,7 +32,7 @@ const PostDetailPage = () => {
       const data = await postService.getPost(postId);
       setPost(data);
     } catch (error) {
-      message.error('加载帖子失败');
+      messageApi.error('加载帖子失败');
     } finally {
       setLoading(false);
     }
@@ -42,7 +45,7 @@ const PostDetailPage = () => {
       await postService.likePost(postId);
       loadPost();
     } catch (error) {
-      message.error('操作失败');
+      messageApi.error('操作失败');
     }
   };
 
@@ -53,7 +56,25 @@ const PostDetailPage = () => {
       await postService.collectPost(postId);
       loadPost();
     } catch (error) {
-      message.error('操作失败');
+      messageApi.error('操作失败');
+    }
+  };
+
+  // AI自动回复
+  const handleAIAutoReply = async () => {
+    if (!post) return;
+    try {
+      setIsGeneratingReply(true);
+      const response = await apiClient.post(`/community/posts/${postId}/ai_reply/`);
+      const data = response.data;
+      // 自动添加评论
+      await postService.createComment(postId, data.reply);
+      messageApi.success('AI回复已添加');
+      loadPost();
+    } catch (error) {
+      messageApi.error('生成回复失败');
+    } finally {
+      setIsGeneratingReply(false);
     }
   };
 
@@ -194,6 +215,14 @@ const PostDetailPage = () => {
               <StarOutlined />
             )}
             <span>收藏</span>
+          </button>
+          <button
+            onClick={handleAIAutoReply}
+            disabled={isGeneratingReply}
+            className="flex items-center gap-2 text-gray-500 hover:text-[#FF6B81] disabled:opacity-50"
+          >
+            <RobotOutlined />
+            <span>{isGeneratingReply ? '生成中...' : 'AI回复'}</span>
           </button>
         </div>
       </div>

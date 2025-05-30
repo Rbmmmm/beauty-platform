@@ -13,7 +13,7 @@ interface CommentListProps {
   onCommentChange?: () => void;
 }
 
-const CommentList: React.FC<CommentListProps> = ({ postId, onCommentChange }) => {
+export const CommentList: React.FC<CommentListProps> = ({ postId, onCommentChange }) => {
   const [form] = Form.useForm();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -262,6 +262,4 @@ const CommentList: React.FC<CommentListProps> = ({ postId, onCommentChange }) =>
       {loading && <div className="text-center"><Spin /></div>}
     </div>
   );
-};
-
-export default CommentList; 
+}; 

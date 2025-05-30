@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # 添加CORS支持
 from agent import process_user_input  # 导入agent.py中的核心功能
+import sys
+import json
 
 app = Flask(__name__)
 CORS(app)  # 启用CORS，允许前端访问
@@ -79,8 +81,31 @@ def test_response(input_text: str = "") -> str:
     else:
         return "抱歉，处理您的请求时出现了问题，请稍后再试"
 
+def generate_reply(content):
+    # 这里只是一个简单的示例回复
+    # 实际使用时会被替换为真实的AI模型调用
+    replies = [
+        "感谢分享！这个建议很有帮助。",
+        "我完全同意你的观点，这确实是个好主意。",
+        "这个想法很有创意，期待看到更多相关内容。",
+        "谢谢分享你的经验，这对其他用户很有参考价值。",
+        "你的建议非常实用，我会尝试一下。"
+    ]
+    
+    # 根据内容长度选择不同的回复
+    index = len(content) % len(replies)
+    return replies[index]
+
 # 测试代码
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print(json.dumps("请提供帖子内容"))
+        sys.exit(1)
+        
+    content = sys.argv[1]
+    reply = generate_reply(content)
+    print(json.dumps(reply))
+    
     # 测试文本输入
     test_inputs = [
         "推荐一款适合干皮的面霜",

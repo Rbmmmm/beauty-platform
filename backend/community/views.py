@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import Post, Category, Comment, Activity, Tag
@@ -13,6 +14,9 @@ from .serializers import (
     ActivitySerializer,
     TagSerializer
 )
+import subprocess
+import json
+import os
 
 # Create your views here.
 
@@ -182,3 +186,101 @@ class ActivityViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [permissions.IsAdminUser()]
         return [permissions.AllowAny()]
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def ai_reply(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id)
+        print(f"处理帖子内容: {post.content}")
+        
+        # 获取项目根目录
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        agent_cli_path = os.path.join(base_dir, 'agent_cli.py')
+        
+        print(f"当前工作目录: {os.getcwd()}")
+        print(f"项目根目录: {base_dir}")
+        print(f"agent_cli.py 完整路径: {agent_cli_path}")
+        
+        if not os.path.exists(agent_cli_path):
+            print(f"错误：找不到文件 {agent_cli_path}")
+            return Response(
+                {'error': f'找不到 agent_cli.py 文件'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+        # 检查 Python 解释器路径
+        python_path = subprocess.run(['which', 'python'], capture_output=True, text=True).stdout.strip()
+        print(f"Python 解释器路径: {python_path}")
+        
+        # 检查文件权限
+        print(f"agent_cli.py 文件权限: {oct(os.stat(agent_cli_path).st_mode)[-3:]}")
+        
+        # 设置 PYTHONPATH 环境变量
+        env = os.environ.copy()
+        env['PYTHONPATH'] = base_dir
+        
+        result = subprocess.run(
+            [python_path, agent_cli_path, post.content],
+            capture_output=True,
+            text=True,
+            cwd=base_dir,  # 设置工作目录为项目根目录
+            env=env  # 使用修改后的环境变量
+        )
+        
+        print(f"agent_cli.py 输出: {result.stdout}")
+        print(f"agent_cli.py 错误: {result.stderr}")
+        print(f"agent_cli.py 返回码: {result.returncode}")
+        
+        if result.returncode != 0:
+            print(f"agent_cli.py 执行错误: {result.stderr}")
+            return Response(
+                {'error': f'生成回复失败: {result.stderr}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+        try:
+            response_data = json.loads(result.stdout)
+            print(f"解析的响应数据: {response_data}")
+            
+            if response_data.get('status') == 'error':
+                error_msg = response_data.get('message', '生成回复失败')
+                print(f"Agent 返回错误: {error_msg}")
+                return Response(
+                    {'error': error_msg},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # 从推荐中提取回复内容
+            recommendation = response_data.get('recommendation', '')
+            if not recommendation:
+                return Response(
+                    {'error': '未获取到有效的回复内容'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # 返回成功响应
+            return Response({
+                'reply': recommendation,
+                'status': 'success'
+            })
+            
+        except json.JSONDecodeError as e:
+            print(f"JSON 解析错误: {str(e)}")
+            print(f"原始输出: {result.stdout}")
+            return Response(
+                {'error': '解析回复内容失败'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+    except Post.DoesNotExist:
+        return Response(
+            {'error': '帖子不存在'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        print(f"发生错误: {str(e)}")
+        return Response(
+            {'error': f'生成回复失败: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
