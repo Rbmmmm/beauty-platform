@@ -152,7 +152,10 @@ const cardItems: CardCarouselItem[] = [
     title: '护肤助手',
     description: '获取每日个性化护肤建议',
     content: (
-      <div className="w-[320px] h-[380px] bg-gradient-to-br from-[#E3F4EA] to-[#F0F9E8] rounded-[28px] p-6 flex flex-col items-start justify-between shadow-lg">
+      <div 
+        className="w-[320px] h-[380px] bg-gradient-to-br from-[#E3F4EA] to-[#F0F9E8] rounded-[28px] p-6 flex flex-col items-start justify-between shadow-lg cursor-pointer hover:scale-[1.02] transition-all duration-300"
+        onClick={() => window.location.href = '/skincare-agent'}
+      >
         <div className="w-full">
           <h3 className="text-2xl font-bold text-[#4CAF50] mb-4">护肤助手</h3>
           <div className="flex items-center justify-between text-base mb-3 text-gray-600">
@@ -179,14 +182,14 @@ const cardItems: CardCarouselItem[] = [
           </div>
         </div>
 
-        <Link href="/skincare-agent" className="w-full">
+        <div className="w-full">
           <button className="w-full py-3 bg-[#4CAF50]/10 rounded-lg text-[#4CAF50] font-medium hover:bg-[#4CAF50]/20 transition-colors flex items-center justify-center">
             <span>获取护肤建议</span>
             <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>
-        </Link>
+        </div>
       </div>
     ),
   },
@@ -261,9 +264,9 @@ function HomePage() {
     },
   ];
 
-  // 合并卡片 (移除静态精彩活动卡片，只保留肤质检测和语音助手)
+  // 合并卡片 (保留所有卡片，包括护肤助手)
   const allCardItems = [
-    ...cardItems.slice(0, 2), // 保留前两个卡片 (肤质检测和语音助手)
+    ...cardItems.slice(0, 3), // 保留前三个卡片 (肤质检测、语音助手和护肤助手)
     ...activityCardItems, // 添加动态生成的活动卡片
   ];
 

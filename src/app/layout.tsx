@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { App } from 'antd';
+import RootLayout from '@/components/layout/RootLayout';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   description: "分享美妆心得，交流护肤经验",
 };
 
-export default function RootLayout({
+export default function Layout({
   children,
 }: {
   children: React.ReactNode;
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body className={inter.className}>
         <App>
-          {children}
+          <RootLayout>
+            {children}
+          </RootLayout>
         </App>
       </body>
     </html>
