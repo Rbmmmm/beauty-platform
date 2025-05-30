@@ -7,12 +7,15 @@ import { Post } from '@/types/post';
 import { postService } from '@/services/postService';
 import { App } from 'antd';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { activityService } from '@/services/activityService';
 import type { Activity } from '@/types/activity';
 
 export default function CommunityPage() {
   const { message } = App.useApp();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [activeTopic, setActiveTopic] = useState('all');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -22,6 +25,12 @@ export default function CommunityPage() {
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 10;
 
+  // 构建顶部分类：全部 + 所有活动
+  const topics = [
+    { id: 'all', name: '全部' },
+    ...activities.map((a) => ({ id: String(a.id), name: a.title })),
+  ];
+
   // 获取活动列表
   useEffect(() => {
     const fetchActivities = async () => {
@@ -30,10 +39,29 @@ export default function CommunityPage() {
         setActivities(res.results || []);
       } catch (error) {
         message.error('获取活动列表失败');
-      }
+      } 
     };
     fetchActivities();
   }, []);
+
+  // 根据 URL 参数和活动加载设置初始 activeTopic
+  useEffect(() => {
+    if (activities.length > 0) { // 确保活动列表已加载
+      const activityIdFromUrl = searchParams.get('activityId');
+      const topicExists = topics.some(topic => topic.id === activityIdFromUrl);
+
+      if (activityIdFromUrl && topicExists) {
+          setActiveTopic(activityIdFromUrl); // 设置 activeTopic 为 URL 中的活动 ID
+      } else {
+          setActiveTopic('all'); // 如果 URL 中没有 activityId 参数、参数无效或活动未加载完成，则默认为全部
+      }
+    } else { // 如果活动列表还没有加载，但 URL 中有参数，先设置为参数值，等活动加载完再验证
+       const activityIdFromUrl = searchParams.get('activityId');
+       if(activityIdFromUrl) {
+           setActiveTopic(activityIdFromUrl); // 暂时设置为 URL 中的 ID
+       }
+    }
+  }, [activities, searchParams, topics.length]); // 依赖 activities 和 searchParams
 
   // 获取帖子列表
   const fetchPosts = async (reset = false) => {
@@ -60,35 +88,57 @@ export default function CommunityPage() {
     }
   };
 
+  // 当 activeTopic 或 page 改变时获取帖子
   useEffect(() => {
-    setPage(1);
-    fetchPosts(true);
-    // eslint-disable-next-line
-  }, [activeTopic]);
-
+    // 在 activities 加载并且 topics 构建完成，或者 activeTopic 是 'all' 时才 fetch posts
+    if (activeTopic === 'all' || activities.length > 0) {
+        setPage(1); // activeTopic 改变时重置页码
+        fetchPosts(true); // 强制刷新
+    }
+  }, [activeTopic, activities.length]); // 依赖 activeTopic 和 activities.length
+  
   useEffect(() => {
-    if (page > 1) {
+    if (page > 1 && (activeTopic === 'all' || activities.length > 0)) {
       fetchPosts();
     }
-    // eslint-disable-next-line
-  }, [page]);
+  }, [page, activeTopic, activities.length]);
 
-  // 监听路由变化，回到社区主页时自动刷新
+  // 监听路由变化，回到社区主页时根据URL参数刷新 (简化)
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        setPage(1);
-        fetchPosts(true);
+        // 当页面可见时，如果当前 activeTopic 不是根据 URL 设置的，或者 URL 参数改变了，则重新同步
+        const activityIdFromUrl = searchParams.get('activityId');
+        const currentActiveTopicIsFromUrl = activeTopic === activityIdFromUrl;
+
+        if (!currentActiveTopicIsFromUrl) { // 如果当前的 activeTopic 不是来自 URL
+            const topicExists = topics.some(topic => topic.id === activityIdFromUrl);
+            if (activityIdFromUrl && topicExists) {
+                setActiveTopic(activityIdFromUrl);
+            } else {
+                setActiveTopic('all');
+            }
+             // 刷新帖子会在 activeTopic 改变时由上面的 useEffect 触发
+        } else if (activeTopic === 'all' && activityIdFromUrl) { // 如果当前是all，但URL有指定活动
+             const topicExists = topics.some(topic => topic.id === activityIdFromUrl);
+             if (topicExists) {
+                 setActiveTopic(activityIdFromUrl);
+             }
+        }
+         // 如果 activeTopic 没变，但帖子列表可能过期，可以考虑手动fetch一次
+         // fetchPosts(true); // 如果需要强制刷新所有情况，取消注释
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, []);
+  }, [searchParams, activeTopic, topics]); // 依赖 searchParams, activeTopic 和 topics
 
   const handleTopicChange = (topicId: string) => {
     setActiveTopic(topicId);
+    // 可选：更新 URL 以反映当前选中的分类，但这会影响浏览器历史记录
+    // router.push(`/community${topicId === 'all' ? '' : `?activityId=${topicId}`}`);
   };
 
   const handleCreatePost = async (data: { content: string; images: File[]; activity?: string; tags?: number[] }) => {
@@ -113,12 +163,6 @@ export default function CommunityPage() {
       return false;
     }
   };
-
-  // 构建顶部分类：全部 + 所有活动
-  const topics = [
-    { id: 'all', name: '全部' },
-    ...activities.map((a) => ({ id: String(a.id), name: a.title })),
-  ];
 
   return (
     <div className="container mx-auto px-4 py-8">

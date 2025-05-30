@@ -5,12 +5,103 @@ import { Button } from 'antd';
 import { CameraOutlined, AudioOutlined, HomeOutlined, BookOutlined, UserOutlined, ShareAltOutlined } from '@ant-design/icons';
 import CardCarousel, { CardCarouselItem } from '@/components/common/CardCarousel';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { activityService } from '@/services/activityService';
 import type { Activity } from '@/types/activity';
 import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // 创建 QueryClient 实例
 const queryClient = new QueryClient();
+
+// 活动卡片组件
+const ActivityCard = () => {
+  const router = useRouter();
+
+  const handleActivityClick = (path: string) => {
+    router.push(path);
+  };
+
+  return (
+    <div className="w-[320px] h-[380px] bg-gradient-to-br from-[#FFF5E5] to-[#FFF0F0] rounded-[28px] p-6 flex flex-col items-start justify-between shadow-lg">
+      <div className="w-full">
+        <h3 className="text-2xl font-bold text-[#FF6B81] mb-2">精彩活动</h3>
+        <p className="text-gray-500 text-sm">参与活动，分享美丽</p>
+      </div>
+      
+      <div className="w-full space-y-3 flex-grow overflow-y-auto pr-1">
+        <div 
+          className="p-4 bg-white/90 rounded-xl shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-[#FF6B81]/10 hover:border-[#FF6B81]/30"
+          onClick={() => handleActivityClick('/community/activities/mother-daughter')}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-lg font-semibold text-[#FF6B81]">母女妆容挑战</h4>
+            <span className="text-xs text-white px-3 py-1 bg-[#FF6B81] rounded-full">进行中</span>
+          </div>
+          <p className="text-gray-600 text-base mb-2">与女儿共同创造美丽回忆</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-sm text-gray-500">
+              <span className="flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B81] mr-1"></span>
+                已有 2,358 对母女参与
+              </span>
+            </div>
+            <span className="text-[#FF6B81] text-sm">查看详情 →</span>
+          </div>
+        </div>
+        
+        <div 
+          className="p-4 bg-white/90 rounded-xl shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-[#FF6B81]/10 hover:border-[#FF6B81]/30"
+          onClick={() => handleActivityClick('/community/activities/square-dance')}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-lg font-semibold text-[#FF6B81]">广场舞美妆</h4>
+            <span className="text-xs text-white px-3 py-1 bg-[#FF6B81] rounded-full">报名中</span>
+          </div>
+          <p className="text-gray-600 text-base mb-2">为您的舞台增添光彩</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-sm text-gray-500">
+              <span className="flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B81] mr-1"></span>
+                已有 1,892 人报名
+              </span>
+            </div>
+            <span className="text-[#FF6B81] text-sm">查看详情 →</span>
+          </div>
+        </div>
+
+        <div 
+          className="p-4 bg-white/90 rounded-xl shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-[#FF6B81]/10 hover:border-[#FF6B81]/30"
+          onClick={() => handleActivityClick('/community/activities/elderly-fashion')}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-lg font-semibold text-[#FF6B81]">银发时尚秀</h4>
+            <span className="text-xs text-white px-3 py-1 bg-[#FF6B81] rounded-full">即将开始</span>
+          </div>
+          <p className="text-gray-600 text-base mb-2">展现银发魅力，绽放自信光彩</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-sm text-gray-500">
+              <span className="flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B81] mr-1"></span>
+                已有 1,256 人关注
+              </span>
+            </div>
+            <span className="text-[#FF6B81] text-sm">查看详情 →</span>
+          </div>
+        </div>
+      </div>
+
+      <button 
+        className="w-full py-3 bg-[#FF6B81]/10 rounded-lg text-[#FF6B81] font-medium hover:bg-[#FF6B81]/20 transition-colors flex items-center justify-center"
+        onClick={() => handleActivityClick('/community')}
+      >
+        <span>查看更多活动</span>
+        <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  );
+};
 
 const cardItems: CardCarouselItem[] = [
   {
@@ -72,12 +163,28 @@ const cardItems: CardCarouselItem[] = [
 
         <div className="w-full bg-white/80 rounded-xl p-4 shadow-md flex-grow flex flex-col justify-center">
           <h4 className="text-xl font-bold text-[#4CAF50] mb-2 text-center">今日护肤建议</h4>
-          <p className="text-gray-600 text-base text-center">根据您的肤质和天气，为您提供专属护肤建议。</p>
+          <div className="space-y-3">
+            <div className="flex items-center text-gray-600">
+              <span className="w-2 h-2 rounded-full bg-[#4CAF50] mr-2"></span>
+              <span>温和清洁，避免过度刺激</span>
+            </div>
+            <div className="flex items-center text-gray-600">
+              <span className="w-2 h-2 rounded-full bg-[#4CAF50] mr-2"></span>
+              <span>加强防晒，预防光老化</span>
+            </div>
+            <div className="flex items-center text-gray-600">
+              <span className="w-2 h-2 rounded-full bg-[#4CAF50] mr-2"></span>
+              <span>保湿修护，维持水油平衡</span>
+            </div>
+          </div>
         </div>
 
         <Link href="/skincare-agent" className="w-full">
-          <button className="w-full py-3 bg-[#4CAF50]/10 rounded-lg text-[#4CAF50] font-medium hover:bg-[#4CAF50]/20 transition-colors">
-            获取护肤建议
+          <button className="w-full py-3 bg-[#4CAF50]/10 rounded-lg text-[#4CAF50] font-medium hover:bg-[#4CAF50]/20 transition-colors flex items-center justify-center">
+            <span>获取护肤建议</span>
+            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </Link>
       </div>
@@ -86,45 +193,7 @@ const cardItems: CardCarouselItem[] = [
   {
     title: '精彩活动',
     description: '母女妆容挑战、广场舞美妆等',
-    content: (
-      <div className="w-[320px] h-[380px] bg-gradient-to-br from-[#FFF5E5] to-[#FFF0F0] rounded-[28px] p-6 flex flex-col items-start justify-between shadow-lg">
-        <h3 className="text-2xl font-bold text-[#FF6B81] w-full mb-4">精彩活动</h3>
-        
-        <div className="w-full space-y-4">
-          <div className="p-4 bg-white/90 rounded-xl shadow-md hover:scale-[1.02] transition-transform cursor-pointer">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-lg font-semibold text-[#FF6B81]">母女妆容挑战</h4>
-              <span className="text-xs text-white px-3 py-1 bg-[#FF6B81] rounded-full">进行中</span>
-            </div>
-            <p className="text-gray-600 text-base mb-2">与女儿共同创造美丽回忆</p>
-            <div className="flex items-center text-sm text-gray-500">
-              <span className="flex items-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B81] mr-1"></span>
-                已有 2,358 对母女参与
-              </span>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-white/90 rounded-xl shadow-md hover:scale-[1.02] transition-transform cursor-pointer">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-lg font-semibold text-[#FF6B81]">广场舞美妆</h4>
-              <span className="text-xs text-white px-3 py-1 bg-[#FF6B81] rounded-full">报名中</span>
-            </div>
-            <p className="text-gray-600 text-base mb-2">为您的舞台增添光彩</p>
-            <div className="flex items-center text-sm text-gray-500">
-              <span className="flex items-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B81] mr-1"></span>
-                已有 1,892 人报名
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <button className="w-full py-3 bg-[#FF6B81]/10 rounded-lg text-[#FF6B81] font-medium hover:bg-[#FF6B81]/20 transition-colors">
-          查看更多活动
-        </button>
-      </div>
-    ),
+    content: <ActivityCard />,
   },
 ];
 
@@ -138,6 +207,8 @@ export default function HomePageWrapper() {
 }
 
 function HomePage() {
+  const router = useRouter();
+
   const { data: activitiesResponse = { results: [] }, isLoading } = useQuery({
     queryKey: ['activities'],
     queryFn: () => activityService.getActivities(),
@@ -146,34 +217,54 @@ function HomePage() {
   // 从分页响应中获取活动列表
   const activities = activitiesResponse.results || [];
 
-  // 只生成一个"精彩活动"卡片，内容为所有活动名称列表
+  // 只生成一个"精彩活动"卡片，内容为所有活动名称列表和查看更多按钮
   const activityCardItems: CardCarouselItem[] = [
     {
       title: '精彩活动',
       description: '',
       content: (
-        <div className="w-[320px] h-[380px] bg-gradient-to-br from-[#FFF5E5] to-[#FFF0F0] rounded-[28px] p-6 flex flex-col items-center justify-center shadow-lg">
-          <h3 className="text-2xl font-bold text-[#FF6B81] text-center mb-6">精彩活动</h3>
-          {activities.length > 0 ? (
-            <ul className="w-full space-y-4">
-              {activities.map((activity) => (
-                <li key={activity.id} className="text-xl text-center text-[#FF6B81] bg-white/80 rounded-lg py-3 px-2 shadow">
+        <div className="w-[320px] h-[380px] bg-gradient-to-br from-[#FFF5E5] to-[#FFF0F0] rounded-[28px] p-6 flex flex-col items-start justify-between shadow-lg">
+          <div className="w-full">
+            <h3 className="text-2xl font-bold text-[#FF6B81] mb-2 text-center">精彩活动</h3>
+            <p className="text-gray-500 text-sm text-center">参与活动，分享美丽</p>
+          </div>
+          
+          <div className="w-full space-y-2 flex-grow overflow-y-auto pr-1">
+            {isLoading ? (
+              <div className="text-center text-gray-500 text-lg">加载中...</div>
+            ) : activities.length > 0 ? (
+              activities.map((activity) => (
+                <div 
+                  key={activity.id}
+                  className="text-lg text-center text-[#FF6B81] bg-white/80 rounded-lg py-2 px-2 shadow hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-[#FF6B81]/10 hover:border-[#FF6B81]/30"
+                  onClick={() => router.push(`/community?activityId=${activity.id}`)}
+                >
                   {activity.title}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="text-gray-400 text-lg text-center">暂无活动</div>
-          )}
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-400 text-lg text-center">暂无活动</div>
+            )}
+          </div>
+
+          <button 
+            className="w-full py-3 bg-[#FF6B81]/10 rounded-lg text-[#FF6B81] font-medium hover:bg-[#FF6B81]/20 transition-colors flex items-center justify-center"
+            onClick={() => router.push('/community')}
+          >
+            <span>查看更多活动</span>
+            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       ),
     },
   ];
 
-  // 合并卡片
+  // 合并卡片 (移除静态精彩活动卡片，只保留肤质检测和语音助手)
   const allCardItems = [
-    ...cardItems.slice(0, 3),
-    ...activityCardItems,
+    ...cardItems.slice(0, 2), // 保留前两个卡片 (肤质检测和语音助手)
+    ...activityCardItems, // 添加动态生成的活动卡片
   ];
 
   // 添加调试日志
