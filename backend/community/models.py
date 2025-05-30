@@ -21,13 +21,45 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+class Tag(models.Model):
+    """标签"""
+    name = models.CharField(_('标签名称'), max_length=50, unique=True)
+    color = models.CharField(_('标签颜色'), max_length=7, default='#000000')
+    created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('标签')
+        verbose_name_plural = _('标签')
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+class Activity(models.Model):
+    """活动"""
+    title = models.CharField(_('活动标题'), max_length=200)
+    description = models.TextField(_('活动描述'))
+    cover_image = models.ImageField(_('封面图片'), upload_to='activity_covers/', blank=True, null=True)
+    tags = models.ManyToManyField(Tag, related_name='activities', blank=True, verbose_name=_('标签'))
+    created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('更新时间'), auto_now=True)
+
+    class Meta:
+        verbose_name = _('活动')
+        verbose_name_plural = _('活动')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
 class Post(models.Model):
     """帖子"""
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts', verbose_name=_('作者'))
     content = models.TextField(_('内容'))
     images = models.JSONField(_('图片'), default=list, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts', verbose_name=_('分类'))
-    tags = models.JSONField(_('标签'), default=list, blank=True)
+    activity = models.ForeignKey(Activity, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts', verbose_name=_('活动'))
+    tags = models.ManyToManyField(Tag, related_name='posts', blank=True, verbose_name=_('标签'))
     likes = models.ManyToManyField(User, related_name='liked_posts', blank=True, verbose_name=_('点赞'))
     collections = models.ManyToManyField(User, related_name='collected_posts', blank=True, verbose_name=_('收藏'))
     created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)

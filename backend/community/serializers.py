@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Post, Category, Comment, PostImage
+from .models import Post, Category, Comment, PostImage, Activity, Tag
 
 User = get_user_model()
 
@@ -65,10 +65,23 @@ class PostImageSerializer(serializers.ModelSerializer):
         model = PostImage
         fields = ['id', 'image']
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ('id', 'name', 'color')
+
+class ActivitySerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True, read_only=True)
+    class Meta:
+        model = Activity
+        fields = ('id', 'title', 'description', 'cover_image', 'tags', 'created_at', 'updated_at')
+
 class PostListSerializer(serializers.ModelSerializer):
     """帖子列表序列化器"""
     author = UserBriefSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
+    activity = ActivitySerializer(read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
@@ -77,7 +90,7 @@ class PostListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'author', 'content', 'images', 'category', 'tags',
+        fields = ('id', 'author', 'content', 'images', 'category', 'activity', 'tags',
                  'likes_count', 'comments_count', 'is_liked', 'is_collected',
                  'created_at', 'updated_at')
         read_only_fields = ('author', 'likes_count', 'comments_count', 'is_liked', 'is_collected')
@@ -119,19 +132,26 @@ class PostCreateSerializer(serializers.ModelSerializer):
     images = serializers.ListField(
         child=serializers.ImageField(), write_only=True, required=False
     )
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, required=False)
+    activity = serializers.PrimaryKeyRelatedField(queryset=Activity.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = Post
-        fields = ('content', 'images', 'category', 'tags')
+        fields = ('content', 'images', 'category', 'activity', 'tags')
         extra_kwargs = {
             'images': {'required': False},
             'category': {'required': False},
+            'activity': {'required': False},
             'tags': {'required': False}
         }
 
     def create(self, validated_data):
         images = validated_data.pop('images', [])
-        post = Post.objects.create(author=self.context['request'].user, **validated_data)
+        tags = validated_data.pop('tags', [])
+        activity = validated_data.pop('activity', None)
+        post = Post.objects.create(author=self.context['request'].user, activity=activity, **validated_data)
+        if tags:
+            post.tags.set(tags)
         for image in images:
             PostImage.objects.create(post=post, image=image)
         return post 

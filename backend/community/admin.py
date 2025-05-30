@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Post, Category, PostImage
+from .models import Post, Category, PostImage, Comment, Activity, Tag
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -69,3 +69,16 @@ class PostAdmin(admin.ModelAdmin):
 @admin.register(PostImage)
 class PostImageAdmin(admin.ModelAdmin):
     list_display = ('id', 'post', 'image')
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'color', 'created_at')
+    search_fields = ('name',)
+    list_filter = ('created_at',)
+
+@admin.register(Activity)
+class ActivityAdmin(admin.ModelAdmin):
+    list_display = ('title', 'created_at', 'updated_at')
+    search_fields = ('title', 'description')
+    list_filter = ('created_at', 'updated_at')
+    filter_horizontal = ('tags',)

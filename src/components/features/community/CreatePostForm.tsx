@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, App } from 'antd';
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import type { RcFile } from 'antd/es/upload';
 import { PostCreateData } from '@/types/post';
+import { activityService } from '@/services/activityService';
+import { apiClient } from '@/services/api';
+import type { Activity, Tag } from '@/types/activity';
 
 interface CreatePostFormProps {
   onSubmit: (data: PostCreateData) => Promise<boolean>;
@@ -15,6 +18,33 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onSubmit, onCancel }) =
   const [content, setContent] = useState('');
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedActivity, setSelectedActivity] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadActivities();
+    loadTags();
+  }, []);
+
+  const loadActivities = async () => {
+    try {
+      const res = await activityService.getActivities();
+      setActivities(res.results || []);
+    } catch (error) {
+      message.error('获取活动列表失败');
+    }
+  };
+
+  const loadTags = async () => {
+    try {
+      const res = await apiClient.get('tags/');
+      setTags(res.data.results || []);
+    } catch (error) {
+      message.error('获取标签列表失败');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +57,9 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onSubmit, onCancel }) =
           name: file.name,
           size: file.size,
           type: file.type
-        }))
+        })),
+        selectedActivity,
+        selectedTags,
       });
 
       if (!content.trim()) {
@@ -53,12 +85,16 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onSubmit, onCancel }) =
 
       const success = await onSubmit({
         content: content.trim(),
-        images: files
+        images: files,
+        activity: selectedActivity || undefined,
+        tags: selectedTags.map(id => Number(id)),
       });
 
       if (success) {
         setContent('');
         setFileList([]);
+        setSelectedActivity('');
+        setSelectedTags([]);
         onCancel();
       }
     } catch (error) {
@@ -81,8 +117,48 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onSubmit, onCancel }) =
     setFileList(newFileList);
   };
 
+  const handleActivityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedActivity(e.target.value);
+  };
+
+  const handleTagsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const options = Array.from(e.target.selectedOptions).map(option => option.value);
+    setSelectedTags(options);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
+      <div>
+        <label htmlFor="activity" className="block text-sm font-medium text-gray-700 mb-1">关联活动</label>
+        <select
+          id="activity"
+          value={selectedActivity}
+          onChange={handleActivityChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+        >
+          <option value="">不关联活动</option>
+          {activities.map((activity) => (
+            <option key={activity.id} value={activity.id}>{activity.title}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">选择标签（可多选）</label>
+        <select
+          id="tags"
+          multiple
+          value={selectedTags}
+          onChange={handleTagsChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+        >
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.id}>{tag.name}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-400 mt-1">按住 Ctrl/Command 可多选</p>
+      </div>
+
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}

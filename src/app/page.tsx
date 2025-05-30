@@ -1,10 +1,16 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from 'antd';
 import { CameraOutlined, AudioOutlined, HomeOutlined, BookOutlined, UserOutlined, ShareAltOutlined } from '@ant-design/icons';
 import CardCarousel, { CardCarouselItem } from '@/components/common/CardCarousel';
 import Link from 'next/link';
+import { activityService } from '@/services/activityService';
+import type { Activity } from '@/types/activity';
+import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// 创建 QueryClient 实例
+const queryClient = new QueryClient();
 
 const cardItems: CardCarouselItem[] = [
   {
@@ -134,7 +140,63 @@ const cardItems: CardCarouselItem[] = [
   },
 ];
 
-export default function HomePage() {
+// 将 HomePage 组件包装在 QueryClientProvider 中
+export default function HomePageWrapper() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <HomePage />
+    </QueryClientProvider>
+  );
+}
+
+function HomePage() {
+  const { data: activitiesResponse = { results: [] }, isLoading } = useQuery({
+    queryKey: ['activities'],
+    queryFn: () => activityService.getActivities(),
+  });
+
+  // 从分页响应中获取活动列表
+  const activities = activitiesResponse.results || [];
+
+  // 只生成一个"精彩活动"卡片，内容为所有活动名称列表
+  const activityCardItems: CardCarouselItem[] = [
+    {
+      title: '精彩活动',
+      description: '',
+      content: (
+        <div className="w-[320px] h-[380px] bg-gradient-to-br from-[#FFF5E5] to-[#FFF0F0] rounded-[28px] p-6 flex flex-col items-center justify-center shadow-lg">
+          <h3 className="text-2xl font-bold text-[#FF6B81] text-center mb-6">精彩活动</h3>
+          {activities.length > 0 ? (
+            <ul className="w-full space-y-4">
+              {activities.map((activity) => (
+                <li key={activity.id} className="text-xl text-center text-[#FF6B81] bg-white/80 rounded-lg py-3 px-2 shadow">
+                  {activity.title}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-gray-400 text-lg text-center">暂无活动</div>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  // 合并卡片
+  const allCardItems = [
+    ...cardItems.slice(0, 3),
+    ...activityCardItems,
+  ];
+
+  // 添加调试日志
+  console.log('Loading:', isLoading);
+  console.log('Activities Response:', activitiesResponse);
+  console.log('Activities:', activities);
+  console.log('Activity Cards:', activityCardItems);
+  console.log('Original Cards:', cardItems);
+  console.log('All Cards:', allCardItems);
+  console.log('All Cards Length:', allCardItems.length);
+
   return (
     <main className="flex-1">
       {/* 标题区域 */}
@@ -149,7 +211,11 @@ export default function HomePage() {
 
       {/* 卡片轮播区 */}
       <div className="w-full flex justify-center mb-16">
-        <CardCarousel items={cardItems} />
+        {isLoading ? (
+          <div className="text-center">加载中...</div>
+        ) : (
+          <CardCarousel items={allCardItems} />
+        )}
       </div>
 
       {/* 快捷按钮区 */}

@@ -3,13 +3,15 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Post, Category, Comment
+from .models import Post, Category, Comment, Activity, Tag
 from .serializers import (
     PostListSerializer,
     PostDetailSerializer,
     PostCreateSerializer,
     CategorySerializer,
-    CommentSerializer
+    CommentSerializer,
+    ActivitySerializer,
+    TagSerializer
 )
 
 # Create your views here.
@@ -29,8 +31,11 @@ class PostViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Post.objects.all()
         category = self.request.query_params.get('category', None)
+        activity = self.request.query_params.get('activity', None)
         if category:
             queryset = queryset.filter(category_id=category)
+        if activity:
+            queryset = queryset.filter(activity_id=activity)
         return queryset.order_by('-created_at')
 
     @action(detail=False, methods=['get'])
@@ -159,3 +164,21 @@ class CommentViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(replies, many=True)
         return Response(serializer.data)
+
+class TagViewSet(viewsets.ModelViewSet):
+    """标签视图集"""
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAdminUser()]
+        return [permissions.AllowAny()]
+
+class ActivityViewSet(viewsets.ModelViewSet):
+    """活动视图集"""
+    queryset = Activity.objects.all()
+    serializer_class = ActivitySerializer
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAdminUser()]
+        return [permissions.AllowAny()]

@@ -1,21 +1,14 @@
 "use client";
 
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import PostList from '@/components/features/community/PostList';
 import CreatePostForm from '@/components/features/community/CreatePostForm';
 import { Post } from '@/types/post';
 import { postService } from '@/services/postService';
 import { App } from 'antd';
 import { useRouter } from 'next/navigation';
-
-const topics = [
-  { id: 'all', name: '全部' },
-  { id: 'makeup', name: '妆容分享' },
-  { id: 'skincare', name: '护肤心得' },
-  { id: 'products', name: '好物推荐' },
-  { id: 'tips', name: '美妆技巧' },
-];
+import { activityService } from '@/services/activityService';
+import type { Activity } from '@/types/activity';
 
 export default function CommunityPage() {
   const { message } = App.useApp();
@@ -24,12 +17,29 @@ export default function CommunityPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activities, setActivities] = useState<Activity[]>([]);
+
+  // 获取活动列表
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const res = await activityService.getActivities();
+        setActivities(res.results || []);
+      } catch (error) {
+        message.error('获取活动列表失败');
+      }
+    };
+    fetchActivities();
+  }, []);
 
   // 获取帖子列表
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const params = activeTopic === 'all' ? undefined : { category: activeTopic };
+      let params = undefined;
+      if (activeTopic !== 'all') {
+        params = { activity: activeTopic };
+      }
       const response = await postService.getPosts(params);
       if (Array.isArray(response)) {
         setPosts(response);
@@ -69,12 +79,13 @@ export default function CommunityPage() {
     setActiveTopic(topicId);
   };
 
-  const handleCreatePost = async (data: { content: string; images: File[] }) => {
+  const handleCreatePost = async (data: { content: string; images: File[]; activity?: string; tags?: number[] }) => {
     try {
       const result = await postService.createPost({
         content: data.content,
         images: data.images,
-        category: activeTopic !== 'all' ? activeTopic : undefined
+        activity: data.activity,
+        tags: data.tags,
       });
       message.success('发布成功');
       setShowCreateForm(false);
@@ -89,6 +100,12 @@ export default function CommunityPage() {
       return false;
     }
   };
+
+  // 构建顶部分类：全部 + 所有活动
+  const topics = [
+    { id: 'all', name: '全部' },
+    ...activities.map((a) => ({ id: String(a.id), name: a.title })),
+  ];
 
   return (
     <div className="container mx-auto px-4 py-8">

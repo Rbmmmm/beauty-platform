@@ -55,6 +55,14 @@ export const postService = {
       if (data.category) {
         formData.append('category', data.category.toString());
       }
+      if (data.activity) {
+        formData.append('activity', data.activity.toString());
+      }
+      if (data.tags && Array.isArray(data.tags)) {
+        data.tags.forEach((tagId: number) => {
+          formData.append('tags', tagId.toString());
+        });
+      }
 
       console.log('发送帖子数据:', {
         content: data.content,
