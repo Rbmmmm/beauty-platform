@@ -67,6 +67,7 @@ const PostDetailPage = () => {
       setIsGeneratingReply(true);
       const response = await apiClient.post(`/community/posts/${postId}/ai_reply/`);
       const data = response.data;
+      
       // 自动添加评论
       await postService.createComment(postId, data.reply);
       messageApi.success('AI回复已添加');

@@ -17,6 +17,7 @@ from .serializers import (
 import subprocess
 import json
 import os
+import time
 
 # Create your views here.
 
@@ -219,14 +220,31 @@ def ai_reply(request, post_id):
         # 设置 PYTHONPATH 环境变量
         env = os.environ.copy()
         env['PYTHONPATH'] = base_dir
+        # 添加随机种子到环境变量，确保每次生成不同的内容
+        env['PYTHONHASHSEED'] = 'random'
         
-        result = subprocess.run(
-            [python_path, agent_cli_path, post.content],
-            capture_output=True,
-            text=True,
-            cwd=base_dir,  # 设置工作目录为项目根目录
-            env=env  # 使用修改后的环境变量
-        )
+        # 使用超时设置和错误处理
+        try:
+            result = subprocess.run(
+                [python_path, agent_cli_path, post.content],
+                capture_output=True,
+                text=True,
+                cwd=base_dir,
+                env=env,
+                timeout=30  # 设置30秒超时
+            )
+        except subprocess.TimeoutExpired:
+            print("执行超时")
+            return Response(
+                {'error': '生成回复超时，请稍后重试'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            print(f"执行错误: {str(e)}")
+            return Response(
+                {'error': f'执行失败: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         print(f"agent_cli.py 输出: {result.stdout}")
         print(f"agent_cli.py 错误: {result.stderr}")
