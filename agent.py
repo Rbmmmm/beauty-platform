@@ -16,7 +16,7 @@ def get_product_recommendation(prompt):
         app_id='7ed520dc4d8e4e7d825297db9bf9d86d',  # 产品推荐agent的应用ID
         prompt=prompt,
         rag_options={
-            "pipeline_ids": ["file_4467d15f735d42c18a5afe02acf93bda_10043558"],  # 化妆品产品信息的知识库ID
+            "pipeline_ids": ["file_a033ca3a3fb7484d9746208357935cc3_10043558"],  # 化妆品产品信息的知识库ID
         }
     )
 
@@ -60,7 +60,7 @@ def get_makeup_recommendation(prompt):
         app_id='0fa6ce810355410c9d07ffac752b1816',  # 妆容推荐agent的应用ID
         prompt=prompt,
         rag_options={
-            "pipeline_ids": ["file_4467d15f735d42c18a5afe02acf93bda_10043558"],  # 妆容信息的知识库ID
+            "pipeline_ids": ["file_6fd8a9133b0d45beb87cefba49afa469_10043558"],  # 妆容信息的知识库ID
         }
     )
 
@@ -85,7 +85,7 @@ def get_product_comparison(prompt):
         app_id='dfa0b4b49a0b47d5849798631ad62c06',        # 产品比价agent的应用id
         prompt=prompt,
         rag_options={
-            "pipeline_ids": ["file_feeeb7356024479c94c54f9f1859e067_10043558"],    # 产品价格的知识库
+            "pipeline_ids": ["file_3de81bceed3d420ab7e7d4baa9315c14_10043558"],    # 产品价格的知识库
         }
     )
 
@@ -100,7 +100,7 @@ def get_product_comparison(prompt):
 
 def markdown_to_text(markdown_text):
     """
-    将Markdown格式的文本转换为纯文本
+    将Markdown格式的文本转换为纯文本，去除多余空行
     :param markdown_text: 输入的Markdown格式文本
     :return: 纯文本格式
     """
@@ -110,16 +110,25 @@ def markdown_to_text(markdown_text):
     # 然后再从HTML提取纯文本
     soup = BeautifulSoup(html, 'html.parser')
     
-    # 提取文本并根据不同主题段落进行分隔
-    text = soup.get_text(separator="\n").strip()
+    # 提取文本
+    text = soup.get_text().strip()
 
-    # 在转换后的文本中为不同主题分段
-    split_text = text.split("\n###")  # 按照标题划分段落
-    # 将分割后的段落合并，每个段落之间添加空行
-    formatted_text = "\n\n".join(split_text)
-    formatted_text = formatted_text.replace('。', '。\n')  # 将句号后面添加换行
+    # 将连续的换行符替换为单个换行符，并处理一些常见的 Markdown 列表和段落格式
+    # 保留段落之间的空行，但去除句子末尾或列表项后的多余空行
+    lines = text.splitlines()
+    cleaned_lines = []
+    for i, line in enumerate(lines):
+        stripped_line = line.strip()
+        if stripped_line:
+            cleaned_lines.append(stripped_line)
+        elif cleaned_lines and cleaned_lines[-1] != '': # 只保留一个空行作为段落分隔
+            cleaned_lines.append('')
+            
+    # 移除末尾可能存在的空行
+    while cleaned_lines and cleaned_lines[-1] == '':
+        cleaned_lines.pop()
 
-    return formatted_text
+    return "\n".join(cleaned_lines)
 
 # 定义皮肤检测结果和护肤/化妆建议
 def get_skin_analysis_and_advice(answers):

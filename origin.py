@@ -17,7 +17,7 @@ def get_product_recommendation(prompt):
         app_id='7ed520dc4d8e4e7d825297db9bf9d86d',  # 产品推荐agent的应用ID
         prompt=prompt,
         rag_options={
-            "pipeline_ids": ["file_4467d15f735d42c18a5afe02acf93bda_10043558"],  # 化妆品产品信息的知识库ID
+            "pipeline_ids": ["file_a033ca3a3fb7484d9746208357935cc3_10043558"],  # 化妆品产品信息的知识库ID
         }
     )
 
@@ -36,7 +36,7 @@ def get_product_recommendation(prompt):
         app_id='0fa6ce810355410c9d07ffac752b1816',  # 妆容推荐agent的应用ID
         prompt=prompt,
         rag_options={
-            "pipeline_ids": ["file_4467d15f735d42c18a5afe02acf93bda_10043558"],  # 妆容信息的知识库ID
+            "pipeline_ids": ["file_6fd8a9133b0d45beb87cefba49afa469_10043558"],  # 妆容信息的知识库ID
         }
     )
 
@@ -106,7 +106,7 @@ def compare_price():
             app_id='dfa0b4b49a0b47d5849798631ad62c06',        #产品比价agent的应用id
             prompt=prompt,
             rag_options={
-                "pipeline_ids": ["file_feeeb7356024479c94c54f9f1859e067_10043558"],    #产品价格的知识库
+                "pipeline_ids": ["file_3de81bceed3d420ab7e7d4baa9315c14_10043558"],    #产品价格的知识库
             }
         )
 
