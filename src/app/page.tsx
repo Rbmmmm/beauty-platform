@@ -45,10 +45,10 @@ const cardItems: CardCarouselItem[] = [
       <div className="w-[320px] h-[380px] bg-gradient-to-b from-[#E3F4EA] to-[#F0F9E8] rounded-[28px] p-6 flex flex-col items-center shadow-lg">
         <h3 className="text-2xl font-bold text-[#4CAF50] mb-8">智能语音助手</h3>
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-32 h-32 rounded-full bg-white flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300 shadow-lg">
+          <Link href="/agent" className="w-32 h-32 rounded-full bg-white flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300 shadow-lg">
             <AudioOutlined className="text-3xl text-[#4CAF50] mb-2" />
             <span className="text-lg font-medium text-[#4CAF50]">按住说话</span>
-          </div>
+          </Link>
         </div>
         <div className="text-center mt-8">
           <p className="text-lg text-gray-600 font-medium mb-1">贴心的美妆小帮手</p>

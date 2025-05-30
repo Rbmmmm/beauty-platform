@@ -9,7 +9,7 @@ import Link from 'next/link';
 // 调用API处理用户输入
 const processUserInput = async (input: string) => {
   try {
-    // 调用API
+    // 调用新的 API 路由
     const response = await fetch('/api/process', {
       method: 'POST',
       headers: {
@@ -23,6 +23,10 @@ const processUserInput = async (input: string) => {
     }
 
     const result = await response.json();
+    
+    if (result.status === 'error') {
+      throw new Error(result.message || '处理请求时出错');
+    }
     
     // 根据不同的意图返回不同的响应
     if (result.intent === 1) {

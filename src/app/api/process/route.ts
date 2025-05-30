@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { spawn } from 'child_process';
 
 export async function POST(request: Request) {
   try {
@@ -15,15 +12,39 @@ export async function POST(request: Request) {
       );
     }
 
-    // 调用Python脚本
-    const { stdout } = await execAsync(`python agent_cli.py "${input.replace(/"/g, '\\"')}"`);
-    const result = JSON.parse(stdout);
+    // 调用 Python 脚本处理输入
+    const result = await new Promise((resolve, reject) => {
+      const pythonProcess = spawn('python', ['agent_cli.py', input]);
+      let output = '';
+
+      pythonProcess.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        console.error(`Python Error: ${data}`);
+      });
+
+      pythonProcess.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Python process exited with code ${code}`));
+        } else {
+          try {
+            // 解析 Python 脚本返回的 JSON
+            const result = JSON.parse(output);
+            resolve(result);
+          } catch (e) {
+            reject(new Error('Failed to parse Python output'));
+          }
+        }
+      });
+    });
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('处理错误:', error);
+    console.error('API Error:', error);
     return NextResponse.json(
-      { error: '处理请求时出错' },
+      { status: 'error', message: '处理请求时出错' },
       { status: 500 }
     );
   }

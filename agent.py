@@ -1,4 +1,4 @@
-from recognition import qwen_text_completion  # 假设您将大模型代码放在一个模块中
+from recognition import qwen_text_completion  # 导入意图识别函数
 from dashscope import Application
 from http import HTTPStatus
 import markdown
@@ -6,12 +6,17 @@ from bs4 import BeautifulSoup
 
 #产品推荐功能
 def get_product_recommendation(prompt):
+    """
+    获取产品推荐
+    :param prompt: 用户输入的需求描述
+    :return: 推荐结果文本
+    """
     response = Application.call(
         api_key="sk-92c2e2b3481548fc9c82aa765268ddbc",  # 产品推荐agent的API Key
         app_id='7ed520dc4d8e4e7d825297db9bf9d86d',  # 产品推荐agent的应用ID
         prompt=prompt,
         rag_options={
-            "pipeline_ids": ["file_a033ca3a3fb7484d9746208357935cc3_10043558"],  # 化妆品产品信息的知识库ID
+            "pipeline_ids": ["file_4467d15f735d42c18a5afe02acf93bda_10043558"],  # 化妆品产品信息的知识库ID
         }
     )
 
@@ -21,7 +26,8 @@ def get_product_recommendation(prompt):
         print(f'message={response.message}')
         return "API调用失败，请稍后再试。"
     else:
-        return response.output.text  # 返回模型的推荐结果
+        # 将返回的markdown转换为纯文本
+        return markdown_to_text(response.output.text)
     
 #护肤agent
 def hufu_agent(prompt):
@@ -44,12 +50,17 @@ def hufu_agent(prompt):
 
 #妆容推荐功能
 def get_makeup_recommendation(prompt):
+    """
+    获取妆容推荐
+    :param prompt: 用户输入的需求描述
+    :return: 推荐结果文本
+    """
     response = Application.call(
         api_key="sk-92c2e2b3481548fc9c82aa765268ddbc",  # 妆容推荐agent的API Key
         app_id='0fa6ce810355410c9d07ffac752b1816',  # 妆容推荐agent的应用ID
         prompt=prompt,
         rag_options={
-            "pipeline_ids": ["file_6fd8a9133b0d45beb87cefba49afa469_10043558"],  # 妆容信息的知识库ID
+            "pipeline_ids": ["file_4467d15f735d42c18a5afe02acf93bda_10043558"],  # 妆容信息的知识库ID
         }
     )
 
@@ -59,16 +70,22 @@ def get_makeup_recommendation(prompt):
         print(f'message={response.message}')
         return "API调用失败，请稍后再试。"
     else:
-        return response.output.text  # 返回模型的推荐结果
+        # 将返回的markdown转换为纯文本
+        return markdown_to_text(response.output.text)
 
 # 产品比价功能
 def get_product_comparison(prompt):
+    """
+    获取产品比价结果
+    :param prompt: 用户输入的需求描述
+    :return: 比价结果文本
+    """
     response = Application.call(
-        api_key="sk-92c2e2b3481548fc9c82aa765268ddbc",    #产品比价agent的apikey
-        app_id='dfa0b4b49a0b47d5849798631ad62c06',        #产品比价agent的应用id
+        api_key="sk-92c2e2b3481548fc9c82aa765268ddbc",    # 产品比价agent的apikey
+        app_id='dfa0b4b49a0b47d5849798631ad62c06',        # 产品比价agent的应用id
         prompt=prompt,
         rag_options={
-            "pipeline_ids": ["file_3de81bceed3d420ab7e7d4baa9315c14_10043558"],    #产品价格的知识库
+            "pipeline_ids": ["file_feeeb7356024479c94c54f9f1859e067_10043558"],    # 产品价格的知识库
         }
     )
 
@@ -78,7 +95,8 @@ def get_product_comparison(prompt):
         print(f'message={response.message}')
         return "API调用失败，请稍后再试。"
     else:
-        return response.output.text  # 返回模型的推荐结果
+        # 将返回的markdown转换为纯文本
+        return markdown_to_text(response.output.text)
 
 def markdown_to_text(markdown_text):
     """
@@ -92,27 +110,15 @@ def markdown_to_text(markdown_text):
     # 然后再从HTML提取纯文本
     soup = BeautifulSoup(html, 'html.parser')
     
-    # 提取文本
-    text = soup.get_text(separator=' ').strip()
-    
-    # 清理多余的空白
-    text = ' '.join(text.split())  # 将多个空白字符替换为单个空格
-    
-    # 处理标题和段落
-    lines = text.split('###')
-    formatted_lines = []
-    for line in lines:
-        if line.strip():
-            formatted_lines.append(line.strip())
-    
-    # 将处理后的文本组合，使用单个换行符分隔
-    formatted_text = '\n'.join(formatted_lines)
-    
-    # 在句号后添加换行，但避免重复的换行
-    formatted_text = formatted_text.replace('。', '。\n')
-    # 清理可能产生的连续换行
-    formatted_text = '\n'.join(line.strip() for line in formatted_text.splitlines() if line.strip())
-    
+    # 提取文本并根据不同主题段落进行分隔
+    text = soup.get_text(separator="\n").strip()
+
+    # 在转换后的文本中为不同主题分段
+    split_text = text.split("\n###")  # 按照标题划分段落
+    # 将分割后的段落合并，每个段落之间添加空行
+    formatted_text = "\n\n".join(split_text)
+    formatted_text = formatted_text.replace('。', '。\n')  # 将句号后面添加换行
+
     return formatted_text
 
 # 定义皮肤检测结果和护肤/化妆建议
@@ -174,11 +180,10 @@ def process_user_input(input_text: str) -> dict:
         if intent == 1:
             # 产品推荐
             recommendation = get_product_recommendation(input_text)
-            formatted_result = markdown_to_text(recommendation)
             return {
                 "status": "success",
                 "intent": intent,
-                "recommendation": formatted_result
+                "recommendation": recommendation
             }
         elif intent == 2:
             # 皮肤检测（返回引导信息）
@@ -189,21 +194,19 @@ def process_user_input(input_text: str) -> dict:
             }
         elif intent == 3:
             # 价格比较
-            comparison = get_product_comparison(f"根据以下用户需求，进行产品比价：{input_text}")
-            formatted_result = markdown_to_text(comparison)
+            comparison = get_product_comparison(input_text)
             return {
                 "status": "success",
                 "intent": intent,
-                "recommendation": formatted_result
+                "recommendation": comparison
             }
         elif intent == 4:
             # 妆容推荐
             recommendation = get_makeup_recommendation(input_text)
-            formatted_result = markdown_to_text(recommendation)
             return {
                 "status": "success",
                 "intent": intent,
-                "recommendation": formatted_result
+                "recommendation": recommendation
             }
         else:
             # 其他意图
