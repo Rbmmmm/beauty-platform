@@ -18,6 +18,7 @@ import subprocess
 import json
 import os
 import time
+from django.contrib.auth import get_user_model
 
 # Create your views here.
 
@@ -192,6 +193,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def ai_reply(request, post_id):
     try:
+        print(f"开始处理AI回复请求 - 帖子ID: {post_id}")
         post = Post.objects.get(id=post_id)
         print(f"处理帖子内容: {post.content}")
         
@@ -204,9 +206,10 @@ def ai_reply(request, post_id):
         print(f"agent_cli.py 完整路径: {agent_cli_path}")
         
         if not os.path.exists(agent_cli_path):
-            print(f"错误：找不到文件 {agent_cli_path}")
+            error_msg = f'找不到 agent_cli.py 文件: {agent_cli_path}'
+            print(f"错误：{error_msg}")
             return Response(
-                {'error': f'找不到 agent_cli.py 文件'},
+                {'error': error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
             
@@ -220,10 +223,9 @@ def ai_reply(request, post_id):
         # 设置 PYTHONPATH 环境变量
         env = os.environ.copy()
         env['PYTHONPATH'] = base_dir
-        # 添加随机种子到环境变量，确保每次生成不同的内容
         env['PYTHONHASHSEED'] = 'random'
         
-        # 使用超时设置和错误处理
+        print("开始执行 agent_cli.py...")
         try:
             result = subprocess.run(
                 [python_path, agent_cli_path, post.content],
@@ -231,29 +233,33 @@ def ai_reply(request, post_id):
                 text=True,
                 cwd=base_dir,
                 env=env,
-                timeout=30  # 设置30秒超时
+                timeout=30
             )
+            print(f"agent_cli.py 执行完成 - 返回码: {result.returncode}")
         except subprocess.TimeoutExpired:
-            print("执行超时")
+            error_msg = '生成回复超时，请稍后重试'
+            print(f"错误：{error_msg}")
             return Response(
-                {'error': '生成回复超时，请稍后重试'},
+                {'error': error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         except Exception as e:
-            print(f"执行错误: {str(e)}")
+            error_msg = f'执行失败: {str(e)}'
+            print(f"错误：{error_msg}")
             return Response(
-                {'error': f'执行失败: {str(e)}'},
+                {'error': error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
         print(f"agent_cli.py 输出: {result.stdout}")
-        print(f"agent_cli.py 错误: {result.stderr}")
-        print(f"agent_cli.py 返回码: {result.returncode}")
+        if result.stderr:
+            print(f"agent_cli.py 错误输出: {result.stderr}")
         
         if result.returncode != 0:
-            print(f"agent_cli.py 执行错误: {result.stderr}")
+            error_msg = f'生成回复失败: {result.stderr}'
+            print(f"错误：{error_msg}")
             return Response(
-                {'error': f'生成回复失败: {result.stderr}'},
+                {'error': error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
             
@@ -269,36 +275,59 @@ def ai_reply(request, post_id):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
             
-            # 从推荐中提取回复内容
             recommendation = response_data.get('recommendation', '')
             if not recommendation:
+                error_msg = '未获取到有效的回复内容'
+                print(f"错误：{error_msg}")
                 return Response(
-                    {'error': '未获取到有效的回复内容'},
+                    {'error': error_msg},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
             
-            # 返回成功响应
+            print("开始创建AI评论...")
+            User = get_user_model()
+            
+            ai_user, created = User.objects.get_or_create(
+                username='AI机器人',
+                defaults={
+                    'is_staff': False,
+                    'is_active': True
+                }
+            )
+            
+            comment = Comment.objects.create(
+                post=post,
+                author=ai_user,
+                content=recommendation
+            )
+            print(f"AI评论创建成功 - ID: {comment.id}")
+            
             return Response({
                 'reply': recommendation,
-                'status': 'success'
-            })
+                'status': 'success',
+                'comment_id': comment.id
+            }, status=status.HTTP_200_OK)
             
         except json.JSONDecodeError as e:
-            print(f"JSON 解析错误: {str(e)}")
+            error_msg = f'解析回复内容失败: {str(e)}'
+            print(f"错误：{error_msg}")
             print(f"原始输出: {result.stdout}")
             return Response(
-                {'error': '解析回复内容失败'},
+                {'error': error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
             
     except Post.DoesNotExist:
+        error_msg = '帖子不存在'
+        print(f"错误：{error_msg}")
         return Response(
-            {'error': '帖子不存在'},
+            {'error': error_msg},
             status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
-        print(f"发生错误: {str(e)}")
+        error_msg = f'生成回复失败: {str(e)}'
+        print(f"错误：{error_msg}")
         return Response(
-            {'error': f'生成回复失败: {str(e)}'},
+            {'error': error_msg},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

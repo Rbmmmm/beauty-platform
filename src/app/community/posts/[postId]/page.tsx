@@ -65,15 +65,39 @@ const PostDetailPage = () => {
     if (!post) return;
     try {
       setIsGeneratingReply(true);
-      const response = await apiClient.post(`/community/posts/${postId}/ai_reply/`);
-      const data = response.data;
+      console.log('开始生成AI回复...');
       
-      // 自动添加评论
-      await postService.createComment(postId, data.reply);
-      messageApi.success('AI回复已添加');
-      loadPost();
-    } catch (error) {
-      messageApi.error('生成回复失败');
+      const response = await apiClient.post(`/community/posts/${postId}/ai_reply/`);
+      console.log('AI回复响应:', response);
+      
+      if (response.data.status === 'success') {
+        messageApi.success('AI回复已添加');
+        await loadPost(); // 等待加载完成
+      } else {
+        const errorMsg = response.data.error || '生成回复失败';
+        console.error('AI回复失败:', errorMsg);
+        messageApi.error(errorMsg);
+      }
+    } catch (error: any) {
+      console.error('AI回复错误详情:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      });
+      
+      let errorMessage = '生成回复失败，请稍后重试';
+      if (error.message === 'timeout of 30000ms exceeded') {
+        errorMessage = '生成回复时间较长，请稍后查看结果';
+        // 即使超时也尝试刷新帖子，因为后端可能已经成功处理了请求
+        await loadPost();
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = `请求失败: ${error.message}`;
+      }
+      
+      messageApi.error(errorMessage);
     } finally {
       setIsGeneratingReply(false);
     }
