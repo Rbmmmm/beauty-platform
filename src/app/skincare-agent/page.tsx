@@ -9,8 +9,8 @@ import Link from 'next/link';
 // 调用API处理用户输入
 const processUserInput = async (input: string) => {
   try {
-    // 调用新的 API 路由
-    const response = await fetch('/api/process', {
+    // 调用新的护肤处理API
+    const response = await fetch('/api/skincare-process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -28,11 +28,14 @@ const processUserInput = async (input: string) => {
       throw new Error(result.message || '处理请求时出错');
     }
     
-    // 根据不同的意图返回不同的响应
+    // 根据不同的意图返回不同的响应 (这里可能需要根据护肤助手的实际后端返回调整)
+    // 暂时沿用 agent.py 的意图处理逻辑作为示例
     if (result.intent === 1) {
       return `产品推荐：\n${result.recommendation}`;
     } else if (result.intent === 2) {
-      return '请点击首页的"智能肤质检测"功能进行皮肤检测';
+      // 假设意图2在agent.py中会返回护肤建议 (虽然目前只返回引导信息)
+      // 在实际集成中，需要后端根据用户的详细护肤档案和天气生成具体建议并返回
+      return result.recommendation || '正在为您生成护肤建议...';
     } else if (result.intent === 3) {
       return "正在为您比较相关产品的价格...";
     } else if (result.intent === 4) {
@@ -46,7 +49,7 @@ const processUserInput = async (input: string) => {
   }
 };
 
-export default function AgentPage() {
+export default function SkincareAgentPage() {
   const [textInput, setTextInput] = useState('');
   const [messages, setMessages] = useState<Array<{type: 'user' | 'agent', content: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +63,7 @@ export default function AgentPage() {
       // 添加用户消息
       setMessages(prev => [...prev, { type: 'user', content: textInput }]);
       
-      // 调用Python函数
+      // 调用API获取响应
       const response = await processUserInput(textInput);
       
       // 添加AI回复
@@ -83,7 +86,7 @@ export default function AgentPage() {
       // 添加用户语音输入消息
       setMessages(prev => [...prev, { type: 'user', content: text }]);
       
-      // 调用Python函数
+      // 调用API获取响应
       const response = await processUserInput(text);
       
       // 添加AI回复
@@ -92,14 +95,14 @@ export default function AgentPage() {
         content: response
       }]);
       
-      return response;
+      return response; // 返回响应给 VoiceAssistant 组件
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFF5F7] to-[#FFF]">
+    <div className="min-h-screen bg-gradient-to-b from-[#E3F4EA] to-[#FFF]">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* 返回按钮和标题区域 */}
         <div className="flex items-center mb-8">
@@ -108,10 +111,10 @@ export default function AgentPage() {
             className="mr-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
             aria-label="返回主页"
           >
-            <IoArrowBack size={32} className="text-[#FF6B81]" />
+            <IoArrowBack size={32} className="text-[#4CAF50]" />
           </Link>
-          <h1 className="text-4xl font-bold text-[#FF6B81]">
-            智能美妆助手
+          <h1 className="text-4xl font-bold text-[#4CAF50]">
+            智能护肤助手
           </h1>
         </div>
 
@@ -120,17 +123,15 @@ export default function AgentPage() {
           {messages.length === 0 && (
             <div className="text-center text-gray-500 py-8">
               <p className="text-2xl mb-4">👋 您好！</p>
-              <p className="text-xl">我是您的智能美妆助手，可以为您：</p>
+              <p className="text-xl">我是您的智能护肤助手，可以根据天气和您的肤质提供每日建议。</p>
               <div className="mt-6 space-y-4 text-lg">
-                <p>🎯 推荐适合的美妆产品</p>
-                <p>💄 推荐个性化妆容方案</p>
-                <p>💰 比较产品价格</p>
-                <p>📝 进行肤质检测</p>
+                <p>🎯 获取今日护肤建议</p>
+                <p>📝 了解更多护肤知识</p>
               </div>
-              <p className="mt-8 text-xl">请试试对我说：</p>
+              <p className="mt-8 text-xl">您可以问：</p>
               <div className="mt-4 space-y-2">
-                <p className="text-[#FF6B81]">"推荐一款适合干皮的面霜"</p>
-                <p className="text-[#FF6B81]">"教我画适合上班的淡妆"</p>
+                <p className="text-[#4CAF50]">"今天的护肤建议"</p>
+                <p className="text-[#4CAF50]">"干性皮肤怎么保湿？"</p>
               </div>
             </div>
           )}
@@ -142,7 +143,7 @@ export default function AgentPage() {
               <div
                 className={`max-w-[80%] rounded-2xl px-6 py-4 ${
                   message.type === 'user'
-                    ? 'bg-[#FF6B81] text-white'
+                    ? 'bg-[#4CAF50] text-white' // 调整用户气泡颜色
                     : 'bg-gray-100 text-gray-800'
                 }`}
               >
@@ -170,7 +171,7 @@ export default function AgentPage() {
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               placeholder="输入您的问题..."
-              className="flex-1 text-2xl p-4 rounded-xl border-2 border-gray-200 focus:border-[#FF6B81] focus:outline-none"
+              className="flex-1 text-2xl p-4 rounded-xl border-2 border-gray-200 focus:border-[#4CAF50] focus:outline-none"
               onKeyPress={(e) => e.key === 'Enter' && handleTextSubmit()}
             />
             <button
@@ -179,7 +180,7 @@ export default function AgentPage() {
               className={`px-6 rounded-xl ${
                 isLoading || !textInput.trim()
                   ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-[#FF6B81] hover:bg-[#FF8296]'
+                  : 'bg-[#4CAF50] hover:bg-[#66BB6A]'
               } text-white transition-colors`}
             >
               <IoMdSend size={32} />

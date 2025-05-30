@@ -29,25 +29,6 @@ def get_product_recommendation(prompt):
         # 将返回的markdown转换为纯文本
         return markdown_to_text(response.output.text)
     
-#护肤agent
-def hufu_agent(prompt):
-    response = Application.call(
-        api_key="sk-92c2e2b3481548fc9c82aa765268ddbc",  #
-        app_id='7ed520dc4d8e4e7d825297db9bf9d86d',  # 
-        prompt=prompt,
-        rag_options={
-            "pipeline_ids": ["07d42855c8d443788d95040370bb6e80"],  
-        }
-    )
-
-    if response.status_code != HTTPStatus.OK:
-        print(f'request_id={response.request_id}')
-        print(f'code={response.status_code}')
-        print(f'message={response.message}')
-        return "API调用失败，请稍后再试。"
-    else:
-        return response.output.text  # 返回模型的推荐结果
-
 #妆容推荐功能
 def get_makeup_recommendation(prompt):
     """
