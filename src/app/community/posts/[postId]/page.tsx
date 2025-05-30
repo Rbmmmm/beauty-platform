@@ -117,6 +117,33 @@ const PostDetailPage = () => {
         {/* 帖子内容 */}
         <div className="text-lg">{post.content}</div>
 
+        {/* 活动信息 */}
+        {post.activity && (
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-[#FF6B81] font-bold text-base bg-[#FFF0F3] px-3 py-1 rounded-full">
+              活动：{post.activity.title}
+            </span>
+          </div>
+        )}
+
+        {/* 标签信息 */}
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {post.tags.map(tag => (
+              <span
+                key={tag.id}
+                className="px-3 py-1 rounded-full text-sm font-medium"
+                style={{
+                  background: tag.color || '#FFE5E5',
+                  color: '#fff',
+                }}
+              >
+                #{tag.name}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* 帖子图片 */}
         {post.images && post.images.length > 0 && (
           <div className="grid grid-cols-2 gap-4">

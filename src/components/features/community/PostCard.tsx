@@ -15,18 +15,14 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
       className="rounded-[28px] shadow-lg bg-white p-4 cursor-pointer hover:scale-[1.02] transition-transform"
       onClick={() => router.push(`/community/posts/${post.id}`)}
     >
-      {/* 封面图片 */}
-      {cover && (
-        <div className="relative aspect-square rounded-2xl overflow-hidden mb-3">
-          <Image
-            src={cover}
-            alt="封面"
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-cover"
-            priority
-          />
-        </div>
+      {/* 含图标记 */}
+      {post.images && post.images.length > 0 && (
+        <span className="inline-flex items-center px-2 py-1 bg-[#FF6B81] text-white text-xs rounded-full mb-2">
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M4 16l4-4a3 3 0 014 0l4 4M2 20h20M12 4v16" />
+          </svg>
+          含图片
+        </span>
       )}
       {/* 作者与内容摘要 */}
       <div className="flex items-center gap-3 mb-2">
